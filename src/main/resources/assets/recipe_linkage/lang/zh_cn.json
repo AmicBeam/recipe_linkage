@@ -24,5 +24,7 @@
   "gui.recipe_linkage.preview": "可提交",
   "gui.recipe_linkage.completed": "已完成",
   "gui.recipe_linkage.progress.remaining": "最少还需提交 %s 次物品",
-  "gui.recipe_linkage.progress.unknown": "无法计算完成研究所需的提交次数"
+  "gui.recipe_linkage.progress.unknown": "无法计算完成研究所需的提交次数",
+  "gui.recipe_linkage.node.click_submit": "点击以提交物品",
+  "gui.recipe_linkage.node.target": "研究目标"
 }

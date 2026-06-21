@@ -14,8 +14,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.ChatFormatting;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMenu> {
@@ -216,7 +219,7 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
             boolean available = graph.isAvailable(i);
             boolean hovered = isInsidePanel(mouseX, mouseY) && isInsideNode(node, mouseX, mouseY);
             if (hovered) {
-                hoveredNode = new HoveredNode(i, stack, available);
+                hoveredNode = new HoveredNode(i, stack, node.unlocked(), available, target);
             }
             renderNode(guiGraphics, node, stack, node.unlocked(), available, target, hovered);
         }
@@ -327,7 +330,14 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
         if (hoveredNode == null || hoveredNode.stack().isEmpty()) {
             return;
         }
-        guiGraphics.renderTooltip(font, hoveredNode.stack(), mouseX, mouseY);
+        ItemStack stack = hoveredNode.stack();
+        List<Component> tooltip = new ArrayList<>(getTooltipFromItem(minecraft, stack));
+        if (hoveredNode.target()) {
+            tooltip.add(Component.translatable("gui.recipe_linkage.node.target").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        } else if (!hoveredNode.unlocked() && hoveredNode.available()) {
+            tooltip.add(Component.translatable("gui.recipe_linkage.node.click_submit").withStyle(ChatFormatting.YELLOW));
+        }
+        guiGraphics.renderTooltip(font, tooltip, stack.getTooltipImage(), mouseX, mouseY);
     }
 
     private void renderProgressTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
@@ -425,7 +435,7 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
             }
             ResearchGraph.Node node = graph.nodes().get(i);
             if (isInsideNode(node, mouseX, mouseY)) {
-                return Optional.of(new HoveredNode(i, graph.stackFor(i), graph.isAvailable(i)));
+                return Optional.of(new HoveredNode(i, graph.stackFor(i), node.unlocked(), graph.isAvailable(i), i == graph.targetIndex()));
             }
         }
         return Optional.empty();
@@ -500,6 +510,6 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
     private record Bounds(double minX, double minY, double maxX, double maxY) {
     }
 
-    private record HoveredNode(int index, ItemStack stack, boolean available) {
+    private record HoveredNode(int index, ItemStack stack, boolean unlocked, boolean available, boolean target) {
     }
 }
