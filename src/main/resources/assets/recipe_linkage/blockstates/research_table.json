@@ -1,0 +1,9 @@
+{
+  "variants": {
+    "facing=north": { "model": "recipe_linkage:block/research_table" },
+    "facing=east": { "model": "recipe_linkage:block/research_table", "y": 90 },
+    "facing=south": { "model": "recipe_linkage:block/research_table", "y": 180 },
+    "facing=west": { "model": "recipe_linkage:block/research_table", "y": 270 }
+  }
+}
+

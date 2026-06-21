@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PCP",
+    "WWW",
+    "I I"
+  ],
+  "key": {
+    "P": { "item": "minecraft:paper" },
+    "C": { "item": "minecraft:copper_ingot" },
+    "W": { "tag": "minecraft:planks" },
+    "I": { "item": "minecraft:iron_ingot" }
+  },
+  "result": {
+    "item": "recipe_linkage:research_table"
+  }
+}
+

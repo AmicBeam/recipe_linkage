@@ -1,0 +1,14 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "recipe_linkage:item/research_sample"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "recipe_linkage:completed": 1.0
+      },
+      "model": "recipe_linkage:item/research_sample_completed"
+    }
+  ]
+}

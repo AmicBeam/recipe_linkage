@@ -1,0 +1,40 @@
+{
+  "title": "Redstone Optics",
+  "target_stage": "redstone_optics",
+  "target": "comparator",
+  "min_distance_to_target": 3,
+  "generation_attempts": 96,
+  "initial_nodes": ["sand"],
+  "nodes": [
+    { "id": "sand", "item": "minecraft:sand", "count": 8, "x": 6, "y": 72 },
+    { "id": "glass", "item": "minecraft:glass", "count": 3, "x": 22, "y": 58 },
+    { "id": "redstone", "item": "minecraft:redstone", "count": 4, "x": 24, "y": 28 },
+    { "id": "quartz", "item": "minecraft:quartz", "count": 2, "x": 50, "y": 35 },
+    { "id": "daylight_detector", "item": "minecraft:daylight_detector", "count": 1, "x": 67, "y": 58 },
+    { "id": "torch", "item": "minecraft:redstone_torch", "count": 2, "x": 62, "y": 20 },
+    { "id": "stone", "item": "minecraft:stone", "count": 3, "x": 76, "y": 33 },
+    { "id": "amethyst", "item": "minecraft:amethyst_shard", "count": 2, "x": 24, "y": 86 },
+    { "id": "tinted_glass", "item": "minecraft:tinted_glass", "count": 1, "x": 48, "y": 82 },
+    { "id": "spyglass", "item": "minecraft:spyglass", "count": 1, "x": 52, "y": 70 },
+    { "id": "copper", "item": "minecraft:copper_ingot", "count": 3, "x": 31, "y": 68 },
+    { "id": "comparator", "item": "minecraft:comparator", "count": 1, "x": 92, "y": 46 }
+  ],
+  "edges": [
+    { "from": "sand", "to": "glass", "chance": 1.0 },
+    { "from": "glass", "to": "daylight_detector", "chance": 0.75 },
+    { "from": "quartz", "to": "daylight_detector", "chance": 0.85 },
+    { "from": "redstone", "to": "quartz", "chance": 0.8 },
+    { "from": "redstone", "to": "torch", "chance": 0.9 },
+    { "from": "torch", "to": "stone", "chance": 0.85 },
+    { "from": "stone", "to": "comparator", "chance": 1.0 },
+    { "from": "quartz", "to": "comparator", "chance": 0.9 },
+    { "from": "daylight_detector", "to": "comparator", "chance": 0.65 },
+    { "from": "glass", "to": "amethyst", "chance": 0.7 },
+    { "from": "amethyst", "to": "tinted_glass", "chance": 0.9 },
+    { "from": "tinted_glass", "to": "daylight_detector", "chance": 0.45 },
+    { "from": "amethyst", "to": "spyglass", "chance": 0.75 },
+    { "from": "copper", "to": "spyglass", "chance": 0.9 },
+    { "from": "copper", "to": "redstone", "chance": 0.5 },
+    { "from": "spyglass", "to": "quartz", "chance": 0.4 }
+  ]
+}
