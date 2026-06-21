@@ -1,6 +1,7 @@
 package com.amicbeam.recipelinkage.research;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.stream.Collectors;
 
 public record ResearchDefinition(
         ResourceLocation id,
-        String title,
+        Component title,
         String targetStage,
         String targetNode,
         int minDistanceToTarget,
@@ -45,7 +46,7 @@ public record ResearchDefinition(
         return nodes.stream().collect(Collectors.toUnmodifiableMap(Node::id, nodes::indexOf));
     }
 
-    public record Node(String id, ResourceLocation item, int count, int x, int y) {
+    public record Node(String id, ResearchMaterial material, int x, int y, boolean fixedPosition) {
     }
 
     public record Edge(String from, String to, double chance) {

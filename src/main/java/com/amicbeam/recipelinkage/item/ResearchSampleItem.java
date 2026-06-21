@@ -28,9 +28,9 @@ public class ResearchSampleItem extends Item {
     public Component getName(ItemStack stack) {
         Optional<ResourceLocation> researchId = ResearchSampleData.researchId(stack);
         if (researchId.isPresent()) {
-            String title = ResearchManager.INSTANCE.get(researchId.get())
+            Component title = ResearchManager.INSTANCE.get(researchId.get())
                     .map(definition -> definition.title())
-                    .orElse(researchId.get().toString());
+                    .orElse(Component.literal(researchId.get().toString()));
             return Component.translatable("item.recipe_linkage.research_sample.bound", title);
         }
         return super.getName(stack);

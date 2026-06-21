@@ -82,6 +82,7 @@ dependencies {
 }
 
 tasks.named('jar', Jar).configure {
+    archiveVersion = "${mod_version}+${minecraft_version}"
     manifest {
         attributes([
                 'Specification-Title'     : mod_id,

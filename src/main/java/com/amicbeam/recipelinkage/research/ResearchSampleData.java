@@ -107,14 +107,15 @@ public final class ResearchSampleData {
         if (nodeIndex < 0 || nodeIndex >= graph.nodes().size() || !graph.isAvailable(nodeIndex)) {
             return UnlockResult.fail(Optional.empty());
         }
-        ItemStack cost = graph.stackFor(nodeIndex);
-        if (cost.isEmpty() || !hasItems(player, cost.getItem(), cost.getCount())) {
+        ResearchMaterial material = graph.nodes().get(nodeIndex).material();
+        ItemStack cost = material.displayStack();
+        if (cost.isEmpty() || !hasItems(player, material)) {
             return UnlockResult.fail(Optional.of(Component.translatable(
                     "message.recipe_linkage.research.need_items",
-                    cost.getCount(),
+                    material.count(),
                     cost.getHoverName())));
         }
-        consumeItems(player, cost.getItem(), cost.getCount());
+        consumeItems(player, material);
         graph.unlock(nodeIndex);
         boolean completed = graph.targetConnected();
         graph.setCompleted(completed);
@@ -125,19 +126,19 @@ public final class ResearchSampleData {
         return UnlockResult.success(completed, graph.stage());
     }
 
-    private static boolean hasItems(ServerPlayer player, Item item, int count) {
-        return countItems(player, item, count) >= count;
+    private static boolean hasItems(ServerPlayer player, ResearchMaterial material) {
+        return countItems(player, material, material.count()) >= material.count();
     }
 
-    private static void consumeItems(ServerPlayer player, Item item, int count) {
-        int remaining = consumeInventoryItems(player.getInventory(), item, count);
+    private static void consumeItems(ServerPlayer player, ResearchMaterial material) {
+        int remaining = consumeInventoryItems(player.getInventory(), material, material.count());
         if (remaining > 0 && RecipeLinkageConfig.ENABLE_SOPHISTICATED_BACKPACK_MATERIALS.get()) {
-            consumeBackpackItems(player.getInventory(), item, remaining);
+            consumeBackpackItems(player.getInventory(), material, remaining);
         }
     }
 
-    private static int countItems(ServerPlayer player, Item item, int limit) {
-        int found = countInventoryItems(player.getInventory(), item, limit);
+    private static int countItems(ServerPlayer player, ResearchMaterial material, int limit) {
+        int found = countInventoryItems(player.getInventory(), material, limit);
         if (found >= limit || !RecipeLinkageConfig.ENABLE_SOPHISTICATED_BACKPACK_MATERIALS.get()) {
             return found;
         }
@@ -146,28 +147,28 @@ public final class ResearchSampleData {
         for (int slot = 0; slot < inventory.getContainerSize() && found < limit; slot++) {
             ItemStack stack = inventory.getItem(slot);
             if (isSophisticatedBackpack(stack)) {
-                found += countBackpackItems(stack, item, limit - found);
+                found += countBackpackItems(stack, material, limit - found);
             }
         }
         return found;
     }
 
-    private static int countInventoryItems(Inventory inventory, Item item, int limit) {
+    private static int countInventoryItems(Inventory inventory, ResearchMaterial material, int limit) {
         int found = 0;
         for (int slot = 0; slot < inventory.getContainerSize() && found < limit; slot++) {
             ItemStack stack = inventory.getItem(slot);
-            if (stack.is(item)) {
+            if (material.matches(stack)) {
                 found += Math.min(stack.getCount(), limit - found);
             }
         }
         return found;
     }
 
-    private static int consumeInventoryItems(Inventory inventory, Item item, int count) {
+    private static int consumeInventoryItems(Inventory inventory, ResearchMaterial material, int count) {
         int remaining = count;
         for (int slot = 0; slot < inventory.getContainerSize() && remaining > 0; slot++) {
             ItemStack stack = inventory.getItem(slot);
-            if (!stack.is(item)) {
+            if (!material.matches(stack)) {
                 continue;
             }
             int taken = Math.min(remaining, stack.getCount());
@@ -178,44 +179,44 @@ public final class ResearchSampleData {
         return remaining;
     }
 
-    private static int countBackpackItems(ItemStack backpack, Item item, int limit) {
+    private static int countBackpackItems(ItemStack backpack, ResearchMaterial material, int limit) {
         return backpack.getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .map(handler -> countHandlerItems(handler, item, limit))
+                .map(handler -> countHandlerItems(handler, material, limit))
                 .orElse(0);
     }
 
-    private static int countHandlerItems(IItemHandler handler, Item item, int limit) {
+    private static int countHandlerItems(IItemHandler handler, ResearchMaterial material, int limit) {
         int found = 0;
         for (int slot = 0; slot < handler.getSlots() && found < limit; slot++) {
             ItemStack stack = handler.getStackInSlot(slot);
-            if (stack.is(item)) {
+            if (material.matches(stack)) {
                 found += handler.extractItem(slot, limit - found, true).getCount();
             }
         }
         return found;
     }
 
-    private static void consumeBackpackItems(Inventory inventory, Item item, int count) {
+    private static void consumeBackpackItems(Inventory inventory, ResearchMaterial material, int count) {
         int remaining = count;
         for (int slot = 0; slot < inventory.getContainerSize() && remaining > 0; slot++) {
             ItemStack stack = inventory.getItem(slot);
             if (isSophisticatedBackpack(stack)) {
-                remaining = consumeBackpackItems(stack, item, remaining);
+                remaining = consumeBackpackItems(stack, material, remaining);
             }
         }
     }
 
-    private static int consumeBackpackItems(ItemStack backpack, Item item, int count) {
+    private static int consumeBackpackItems(ItemStack backpack, ResearchMaterial material, int count) {
         return backpack.getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .map(handler -> consumeHandlerItems(handler, item, count))
+                .map(handler -> consumeHandlerItems(handler, material, count))
                 .orElse(count);
     }
 
-    private static int consumeHandlerItems(IItemHandler handler, Item item, int count) {
+    private static int consumeHandlerItems(IItemHandler handler, ResearchMaterial material, int count) {
         int remaining = count;
         for (int slot = 0; slot < handler.getSlots() && remaining > 0; slot++) {
             ItemStack stack = handler.getStackInSlot(slot);
-            if (stack.is(item)) {
+            if (material.matches(stack)) {
                 remaining -= handler.extractItem(slot, remaining, false).getCount();
             }
         }

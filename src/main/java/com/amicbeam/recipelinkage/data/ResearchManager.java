@@ -2,11 +2,18 @@ package com.amicbeam.recipelinkage.data;
 
 import com.amicbeam.recipelinkage.RecipeLinkage;
 import com.amicbeam.recipelinkage.research.ResearchDefinition;
+import com.amicbeam.recipelinkage.research.ResearchMaterial;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
@@ -62,7 +69,7 @@ public class ResearchManager extends SimpleJsonResourceReloadListener {
     }
 
     private static ResearchDefinition parse(ResourceLocation id, JsonObject object) {
-        String title = GsonHelper.getAsString(object, "title", id.toString());
+        Component title = parseTitle(id, object);
         String targetStage = GsonHelper.getAsString(object, "target_stage");
         String targetNode = GsonHelper.getAsString(object, "target");
         int minDistance = Math.max(1, GsonHelper.getAsInt(object, "min_distance_to_target", 2));
@@ -75,19 +82,56 @@ public class ResearchManager extends SimpleJsonResourceReloadListener {
         return new ResearchDefinition(id, title, targetStage, targetNode, minDistance, attempts, randomInitialNodes, initialNodes, nodes, edges);
     }
 
+    private static Component parseTitle(ResourceLocation id, JsonObject object) {
+        if (!object.has("title")) {
+            return Component.literal(id.toString());
+        }
+        try {
+            Component title = Component.Serializer.fromJson(object.get("title"));
+            return title == null ? Component.literal(id.toString()) : title;
+        } catch (JsonParseException ex) {
+            throw new JsonSyntaxException("Invalid title component: " + ex.getMessage(), ex);
+        }
+    }
+
     private static List<ResearchDefinition.Node> parseNodes(JsonObject object) {
         JsonArray array = GsonHelper.getAsJsonArray(object, "nodes");
         List<ResearchDefinition.Node> nodes = new ArrayList<>();
         for (int i = 0; i < array.size(); i++) {
             JsonObject nodeObject = GsonHelper.convertToJsonObject(array.get(i), "nodes[" + i + "]");
             String nodeId = GsonHelper.getAsString(nodeObject, "id");
-            ResourceLocation itemId = parseId(GsonHelper.getAsString(nodeObject, "item"), "nodes[" + i + "].item");
-            int count = Math.max(1, GsonHelper.getAsInt(nodeObject, "count", 1));
-            int x = clamp(GsonHelper.getAsInt(nodeObject, "x", 50), 0, 100);
-            int y = clamp(GsonHelper.getAsInt(nodeObject, "y", 50), 0, 100);
-            nodes.add(new ResearchDefinition.Node(nodeId, itemId, count, x, y));
+            ResearchMaterial material = parseMaterial(nodeObject, i);
+            boolean fixedPosition = nodeObject.has("x") && nodeObject.has("y");
+            int x = fixedPosition ? clamp(GsonHelper.getAsInt(nodeObject, "x"), 0, 100) : 50;
+            int y = fixedPosition ? clamp(GsonHelper.getAsInt(nodeObject, "y"), 0, 100) : 50;
+            nodes.add(new ResearchDefinition.Node(nodeId, material, x, y, fixedPosition));
         }
         return List.copyOf(nodes);
+    }
+
+    private static ResearchMaterial parseMaterial(JsonObject nodeObject, int index) {
+        boolean hasItem = nodeObject.has("item");
+        boolean hasTag = nodeObject.has("tag");
+        if (hasItem == hasTag) {
+            throw new IllegalArgumentException("nodes[" + index + "] must contain exactly one of item or tag");
+        }
+        int count = Math.max(1, GsonHelper.getAsInt(nodeObject, "count", 1));
+        CompoundTag nbt = parseNbt(nodeObject, "nodes[" + index + "].nbt");
+        if (hasTag) {
+            return ResearchMaterial.tag(parseId(GsonHelper.getAsString(nodeObject, "tag"), "nodes[" + index + "].tag"), count, nbt);
+        }
+        return ResearchMaterial.item(parseId(GsonHelper.getAsString(nodeObject, "item"), "nodes[" + index + "].item"), count, nbt);
+    }
+
+    private static CompoundTag parseNbt(JsonObject object, String field) {
+        if (!object.has("nbt")) {
+            return null;
+        }
+        try {
+            return TagParser.parseTag(GsonHelper.convertToString(object.get("nbt"), field));
+        } catch (CommandSyntaxException ex) {
+            throw new JsonSyntaxException("Invalid " + field + ": " + ex.getMessage());
+        }
     }
 
     private static List<ResearchDefinition.Edge> parseEdges(JsonObject object) {
@@ -128,8 +172,8 @@ public class ResearchManager extends SimpleJsonResourceReloadListener {
             if (nodeIds.put(node.id(), i) != null) {
                 throw new IllegalArgumentException("duplicate node id " + node.id());
             }
-            if (!ForgeRegistries.ITEMS.containsKey(node.item())) {
-                throw new IllegalArgumentException("node " + node.id() + " references missing item " + node.item());
+            if (!node.material().tag() && !ForgeRegistries.ITEMS.containsKey(node.material().id())) {
+                throw new IllegalArgumentException("node " + node.id() + " references missing item " + node.material().id());
             }
         }
         if (!nodeIds.containsKey(targetNode)) {

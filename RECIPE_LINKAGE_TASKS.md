@@ -16,8 +16,8 @@
 - A sample stores its generated graph in item NBT. Removing it from the table never rolls back progress or refreshes routes.
 - The graph target is always visible. Initial submit-ready nodes can be configured by datapack with `initial_nodes`; if omitted, one initial node is chosen randomly and kept away from the target when possible.
 - Generated graph layouts nudge participating nodes apart to reduce icon overlap. The research panel supports mouse-wheel zoom and left-drag panning.
-- Neighboring locked nodes appear as translucent item icons with required counts. Players can hover them for full item tooltips and query JEI recipes.
-- Clicking an available node consumes the displayed item count from the player's inventory and unlocks that node. Items are not refunded.
+- Neighboring locked nodes appear as translucent material icons with required counts. Players can hover them for full tooltips and query JEI recipes.
+- Clicking an available node consumes the displayed material count from the player's inventory and unlocks that node. Materials are not refunded.
 - When the unlocked component reaches the target, the sample is marked completed and the configured AStages stage is granted.
 - A completed sample is not consumed. Holding it and right-clicking grants the stage again to the holder.
 
@@ -37,7 +37,7 @@
 
 - Verified with `./gradlew build`.
 - Verified with `./gradlew --offline build`.
-- Jar: `build/libs/recipe_linkage-0.0.1.jar`.
+- Jar: `build/libs/recipe_linkage-0.0.1+1.20.1.jar`.
 
 ## Datapack sketch
 

@@ -37,6 +37,7 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
     private static final int PROGRESS_Y = PANEL_Y;
     private static final int PROGRESS_W = 26;
     private static final int PROGRESS_H = 70;
+    private static final int SAMPLE_LABEL_MAX_W = 30;
     private static final int NODE_SIZE = 24;
     private static final double MIN_ZOOM = 0.55D;
     private static final double MAX_ZOOM = 2.5D;
@@ -86,7 +87,7 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
         guiGraphics.drawString(font, title, titleLabelX, titleLabelY, TEXT, false);
         Optional<ResearchGraph> graph = ResearchSampleData.graph(menu.sampleStack());
         graph.ifPresent(value -> drawRightTitle(guiGraphics, value.title()));
-        guiGraphics.drawString(font, Component.translatable("gui.recipe_linkage.sample_slot"), 8, 91, MUTED, false);
+        drawFittedLabel(guiGraphics, Component.translatable("gui.recipe_linkage.sample_slot"), 8, 91, SAMPLE_LABEL_MAX_W, MUTED);
         guiGraphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, TEXT, false);
 
         if (graph.isEmpty()) {
@@ -99,8 +100,9 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
         }
     }
 
-    private void drawRightTitle(GuiGraphics guiGraphics, String text) {
-        if (text == null || text.isBlank()) {
+    private void drawRightTitle(GuiGraphics guiGraphics, Component title) {
+        String text = title.getString();
+        if (text.isBlank()) {
             return;
         }
         int right = imageWidth - 8;
@@ -112,6 +114,20 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
             displayed = font.plainSubstrByWidth(displayed, Math.max(0, maxWidth - font.width(ellipsis))) + ellipsis;
         }
         guiGraphics.drawString(font, displayed, right - font.width(displayed), titleLabelY, MUTED, false);
+    }
+
+    private void drawFittedLabel(GuiGraphics guiGraphics, Component label, int x, int y, int maxWidth, int color) {
+        int width = font.width(label);
+        if (width <= maxWidth) {
+            guiGraphics.drawString(font, label, x, y, color, false);
+            return;
+        }
+        float scale = Math.max(0.72F, maxWidth / (float) width);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(x, y, 0.0F);
+        guiGraphics.pose().scale(scale, scale, 1.0F);
+        guiGraphics.drawString(font, label, 0, 0, color, false);
+        guiGraphics.pose().popPose();
     }
 
     @Override
@@ -366,7 +382,7 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
 
     private String viewKey(ResearchGraph graph) {
         StringBuilder builder = new StringBuilder();
-        builder.append(graph.title()).append('|').append(graph.stage()).append('|')
+        builder.append(Component.Serializer.toJson(graph.title())).append('|').append(graph.stage()).append('|')
                 .append(graph.startIndex()).append('|').append(graph.targetIndex()).append('|');
         for (ResearchGraph.Node node : graph.nodes()) {
             builder.append(node.id()).append('@').append(node.x()).append(',').append(node.y()).append(';');

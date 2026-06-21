@@ -20,7 +20,10 @@ The first time the sample is inserted into a research table, the generated graph
 
 ```json
 {
-  "title": "Resonant Core",
+  "title": {
+    "translate": "research.modpack.resonant_core",
+    "fallback": "Resonant Core"
+  },
   "target_stage": "resonant_core",
   "target": "amethyst",
   "min_distance_to_target": 3,
@@ -30,11 +33,11 @@ The first time the sample is inserted into a research table, the generated graph
     { "id": "copper", "item": "minecraft:copper_ingot", "count": 2, "x": 5, "y": 55 },
     { "id": "redstone", "item": "minecraft:redstone", "count": 4, "x": 30, "y": 40 },
     { "id": "quartz", "item": "minecraft:quartz", "count": 2, "x": 55, "y": 45 },
-    { "id": "glass", "item": "minecraft:glass", "count": 3, "x": 32, "y": 72 },
+    { "id": "glass", "tag": "minecraft:smelts_to_glass", "count": 3, "x": 32, "y": 72 },
     { "id": "amethyst", "item": "minecraft:amethyst_shard", "count": 1, "x": 88, "y": 52 }
   ],
   "edges": [
-    { "from": "copper", "to": "redstone", "chance": 1.0 },
+    { "from": "copper", "to": "redstone" },
     { "from": "redstone", "to": "quartz", "chance": 0.8 },
     { "from": "quartz", "to": "amethyst", "chance": 0.9 },
     { "from": "copper", "to": "glass", "chance": 0.75 },
@@ -45,16 +48,30 @@ The first time the sample is inserted into a research table, the generated graph
 
 ## Field Notes
 
+- `title`: Minecraft text component used as the research display name. Use `{ "translate": "research.<namespace>.<path>", "fallback": "Readable Name" }` when pack authors want localization.
+- Localized title strings are client assets, so put them in a resource pack or KubeJS assets, for example `assets/<namespace>/lang/en_us.json` and `assets/<namespace>/lang/zh_cn.json`.
 - `target_stage`: AStages stage string passed to `/astages add <player> <stage> true true`.
 - `target`: node id of the visible final node.
 - `initial_nodes`: optional array of node ids that are available to submit at the start. They are not pre-submitted. Multiple initial nodes are allowed. If the field is omitted or empty, one initial node is chosen randomly with `min_distance_to_target` applied when possible.
-- `min_distance_to_target`: preferred minimum graph distance between the randomly generated start node and target. If no candidate satisfies it, generation falls back to the farthest valid node. Configured `initial_nodes` are trusted as pack-authored starts.
+- `min_distance_to_target`: preferred minimum number of material submissions needed to finish the research from the initial available node set. The target node itself is not counted because it does not require submission. Candidates that satisfy this value are preferred; if none can satisfy it, generation falls back to the farthest valid candidate.
 - `generation_attempts`: number of weighted graph candidates to generate before taking the best-scored one.
-- `nodes[].x` and `nodes[].y`: percentage coordinates used as the initial layout. Generated samples may nudge participating nodes apart to prevent icon overlap.
-- `nodes[].count`: item count consumed when unlocking that node.
-- `edges[].chance`: probability that this edge appears in an individual generated sample graph.
+- `nodes[]`: each node must contain exactly one material key, either `item` or `tag`, following the same style as recipe ingredient objects. Use `item` for one concrete item id, or `tag` for an item tag id.
+- `nodes[].count`: material count consumed when unlocking that node. Defaults to `1`.
+- `nodes[].nbt`: optional SNBT string matched against submitted stacks, for example `{Damage:0}` or `{"Potion":"minecraft:water"}`. The specified NBT must be present; unrelated extra NBT on the submitted stack is allowed.
+- Tag nodes accept any item in the tag. Their graph icon is the first registered item in that tag.
+- `nodes[].x` and `nodes[].y`: optional percentage coordinates used as fixed layout anchors. Provide both fields to pin a node. If either field is omitted, the node is placed by the automatic layout.
+- Automatic layout: generated after the route graph, initial nodes, and target are known. It places the start side on the left, the target on the right, groups nodes by graph distance, and uses a compact football-shaped vertical spread. A few cheap ordering and overlap passes are applied to reduce crossing lines and icon overlap.
+- `edges[].chance`: probability that this edge appears in an individual generated sample graph. Defaults to `1.0` when omitted.
 
-The table progress bar uses the shortest remaining number of item submissions, not raw edge distance. The final target node does not require item submission.
+The table progress bar uses the shortest remaining number of material submissions, not raw edge distance. The final target node does not require material submission.
+
+Example language file:
+
+```json
+{
+  "research.modpack.resonant_core": "Resonant Core"
+}
+```
 
 ## Mod Config
 

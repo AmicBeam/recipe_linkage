@@ -23,8 +23,8 @@
   "gui.recipe_linkage.revealed": "Revealed",
   "gui.recipe_linkage.preview": "Available",
   "gui.recipe_linkage.completed": "Completed",
-  "gui.recipe_linkage.progress.remaining": "Minimum remaining item submissions: %s",
-  "gui.recipe_linkage.progress.unknown": "Unable to calculate remaining submissions",
-  "gui.recipe_linkage.node.click_submit": "Click to submit item",
+  "gui.recipe_linkage.progress.remaining": "At least %s research steps",
+  "gui.recipe_linkage.progress.unknown": "Unable to calculate steps",
+  "gui.recipe_linkage.node.click_submit": "Click to submit item for research",
   "gui.recipe_linkage.node.target": "Research Target"
 }

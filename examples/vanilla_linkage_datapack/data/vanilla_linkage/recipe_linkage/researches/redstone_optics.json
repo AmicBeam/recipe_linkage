@@ -1,12 +1,15 @@
 {
-  "title": "Redstone Optics",
+  "title": {
+    "translate": "research.vanilla_linkage.redstone_optics",
+    "fallback": "Redstone Optics"
+  },
   "target_stage": "redstone_optics",
   "target": "comparator",
   "min_distance_to_target": 3,
   "generation_attempts": 96,
   "initial_nodes": ["sand"],
   "nodes": [
-    { "id": "sand", "item": "minecraft:sand", "count": 8, "x": 6, "y": 72 },
+    { "id": "sand", "tag": "minecraft:sand", "count": 8, "x": 6, "y": 72 },
     { "id": "glass", "item": "minecraft:glass", "count": 3, "x": 22, "y": 58 },
     { "id": "redstone", "item": "minecraft:redstone", "count": 4, "x": 24, "y": 28 },
     { "id": "quartz", "item": "minecraft:quartz", "count": 2, "x": 50, "y": 35 },
@@ -20,13 +23,13 @@
     { "id": "comparator", "item": "minecraft:comparator", "count": 1, "x": 92, "y": 46 }
   ],
   "edges": [
-    { "from": "sand", "to": "glass", "chance": 1.0 },
+    { "from": "sand", "to": "glass" },
     { "from": "glass", "to": "daylight_detector", "chance": 0.75 },
     { "from": "quartz", "to": "daylight_detector", "chance": 0.85 },
     { "from": "redstone", "to": "quartz", "chance": 0.8 },
     { "from": "redstone", "to": "torch", "chance": 0.9 },
     { "from": "torch", "to": "stone", "chance": 0.85 },
-    { "from": "stone", "to": "comparator", "chance": 1.0 },
+    { "from": "stone", "to": "comparator" },
     { "from": "quartz", "to": "comparator", "chance": 0.9 },
     { "from": "daylight_detector", "to": "comparator", "chance": 0.65 },
     { "from": "glass", "to": "amethyst", "chance": 0.7 },

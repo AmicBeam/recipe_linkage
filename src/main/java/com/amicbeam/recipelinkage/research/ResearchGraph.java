@@ -1,13 +1,12 @@
 package com.amicbeam.recipelinkage.research;
 
 import com.amicbeam.recipelinkage.config.RecipeLinkageConfig;
+import com.google.gson.JsonParseException;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -16,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 public class ResearchGraph {
-    private final String title;
+    private final Component title;
     private final String stage;
     private final int startIndex;
     private final int targetIndex;
@@ -25,7 +24,7 @@ public class ResearchGraph {
     private final List<Node> nodes;
     private final List<Edge> edges;
 
-    public ResearchGraph(String title, String stage, int startIndex, int targetIndex, List<Integer> initialIndices, boolean completed, List<Node> nodes, List<Edge> edges) {
+    public ResearchGraph(Component title, String stage, int startIndex, int targetIndex, List<Integer> initialIndices, boolean completed, List<Node> nodes, List<Edge> edges) {
         this.title = title;
         this.stage = stage;
         this.startIndex = startIndex;
@@ -36,7 +35,7 @@ public class ResearchGraph {
         this.edges = new ArrayList<>(edges);
     }
 
-    public String title() {
+    public Component title() {
         return title;
     }
 
@@ -109,7 +108,7 @@ public class ResearchGraph {
 
     public void unlock(int nodeIndex) {
         Node node = nodes.get(nodeIndex);
-        nodes.set(nodeIndex, new Node(node.id(), node.item(), node.count(), node.x(), node.y(), true));
+        nodes.set(nodeIndex, new Node(node.id(), node.material(), node.x(), node.y(), true));
     }
 
     public boolean targetConnected() {
@@ -224,17 +223,12 @@ public class ResearchGraph {
     }
 
     public ItemStack stackFor(int nodeIndex) {
-        Node node = nodes.get(nodeIndex);
-        Item item = ForgeRegistries.ITEMS.getValue(node.item());
-        if (item == null) {
-            return ItemStack.EMPTY;
-        }
-        return new ItemStack(item, Math.max(1, node.count()));
+        return nodes.get(nodeIndex).material().displayStack();
     }
 
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
-        tag.putString("Title", title);
+        tag.putString("Title", Component.Serializer.toJson(title));
         tag.putString("Stage", stage);
         tag.putInt("Start", startIndex);
         tag.putInt("Target", targetIndex);
@@ -252,8 +246,7 @@ public class ResearchGraph {
         for (Node node : nodes) {
             CompoundTag nodeTag = new CompoundTag();
             nodeTag.putString("Id", node.id());
-            nodeTag.putString("Item", node.item().toString());
-            nodeTag.putInt("Count", node.count());
+            nodeTag.put("Material", node.material().toTag());
             nodeTag.putInt("X", node.x());
             nodeTag.putInt("Y", node.y());
             nodeTag.putBoolean("Unlocked", node.unlocked());
@@ -277,14 +270,12 @@ public class ResearchGraph {
         ListTag nodeList = tag.getList("Nodes", Tag.TAG_COMPOUND);
         for (int i = 0; i < nodeList.size(); i++) {
             CompoundTag nodeTag = nodeList.getCompound(i);
-            ResourceLocation item = ResourceLocation.tryParse(nodeTag.getString("Item"));
-            if (item == null) {
-                item = new ResourceLocation("minecraft", "barrier");
-            }
+            ResearchMaterial material = nodeTag.contains("Material", Tag.TAG_COMPOUND)
+                    ? ResearchMaterial.fromTag(nodeTag.getCompound("Material"))
+                    : ResearchMaterial.fallback();
             nodes.add(new Node(
                     nodeTag.getString("Id"),
-                    item,
-                    Math.max(1, nodeTag.getInt("Count")),
+                    material,
                     nodeTag.getInt("X"),
                     nodeTag.getInt("Y"),
                     nodeTag.getBoolean("Unlocked")));
@@ -307,7 +298,7 @@ public class ResearchGraph {
             initialIndices.add(tag.getInt("Start"));
         }
         return new ResearchGraph(
-                tag.getString("Title"),
+                titleFromTag(tag),
                 tag.getString("Stage"),
                 tag.getInt("Start"),
                 tag.getInt("Target"),
@@ -317,7 +308,20 @@ public class ResearchGraph {
                 edges);
     }
 
-    public record Node(String id, ResourceLocation item, int count, int x, int y, boolean unlocked) {
+    private static Component titleFromTag(CompoundTag tag) {
+        String title = tag.getString("Title");
+        if (title.isBlank()) {
+            return Component.empty();
+        }
+        try {
+            Component parsed = Component.Serializer.fromJson(title);
+            return parsed == null ? Component.literal(title) : parsed;
+        } catch (JsonParseException ex) {
+            return Component.literal(title);
+        }
+    }
+
+    public record Node(String id, ResearchMaterial material, int x, int y, boolean unlocked) {
     }
 
     public record Edge(int a, int b) {
