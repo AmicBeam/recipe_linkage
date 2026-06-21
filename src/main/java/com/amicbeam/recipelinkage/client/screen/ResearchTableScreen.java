@@ -83,7 +83,7 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
         guiGraphics.drawString(font, title, titleLabelX, titleLabelY, TEXT, false);
         Optional<ResearchGraph> graph = ResearchSampleData.graph(menu.sampleStack());
         graph.ifPresent(value -> drawRightTitle(guiGraphics, value.title()));
-        guiGraphics.drawString(font, Component.translatable("gui.recipe_linkage.sample_slot"), 8, 90, MUTED, false);
+        guiGraphics.drawString(font, Component.translatable("gui.recipe_linkage.sample_slot"), 8, 89, MUTED, false);
         guiGraphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, TEXT, false);
 
         if (graph.isEmpty()) {

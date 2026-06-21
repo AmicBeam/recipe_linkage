@@ -35,7 +35,7 @@ public class ResearchTableMenu extends AbstractContainerMenu {
         this.table = table;
         this.access = access;
 
-        addSlot(new SlotItemHandler(table.inventory(), ResearchTableBlockEntity.SLOT_SAMPLE, 13, 108));
+        addSlot(new SlotItemHandler(table.inventory(), ResearchTableBlockEntity.SLOT_SAMPLE, 14, 105));
         addPlayerInventory(playerInventory);
     }
 
