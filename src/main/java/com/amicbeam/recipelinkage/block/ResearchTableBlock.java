@@ -32,7 +32,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class ResearchTableBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    private static final VoxelShape SHAPE = makeShape();
+    private static final VoxelShape SHAPE_NORTH = makeShape(Direction.NORTH);
+    private static final VoxelShape SHAPE_EAST = makeShape(Direction.EAST);
+    private static final VoxelShape SHAPE_SOUTH = makeShape(Direction.SOUTH);
+    private static final VoxelShape SHAPE_WEST = makeShape(Direction.WEST);
 
     public ResearchTableBlock(Properties properties) {
         super(properties);
@@ -101,10 +104,15 @@ public class ResearchTableBlock extends BaseEntityBlock {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return SHAPE;
+        return switch (state.getValue(FACING)) {
+            case EAST -> SHAPE_EAST;
+            case SOUTH -> SHAPE_SOUTH;
+            case WEST -> SHAPE_WEST;
+            default -> SHAPE_NORTH;
+        };
     }
 
-    private static VoxelShape makeShape() {
+    private static VoxelShape makeShape(Direction facing) {
         VoxelShape shape = Shapes.empty();
         shape = Shapes.join(shape, box(0.0D, 11.0D, 0.0D, 16.0D, 14.0D, 16.0D), BooleanOp.OR);
         shape = Shapes.join(shape, box(1.0D, 14.0D, 1.0D, 15.0D, 15.0D, 15.0D), BooleanOp.OR);
@@ -112,11 +120,20 @@ public class ResearchTableBlock extends BaseEntityBlock {
         shape = Shapes.join(shape, box(13.0D, 0.0D, 1.0D, 15.0D, 11.0D, 3.0D), BooleanOp.OR);
         shape = Shapes.join(shape, box(1.0D, 0.0D, 13.0D, 3.0D, 11.0D, 15.0D), BooleanOp.OR);
         shape = Shapes.join(shape, box(13.0D, 0.0D, 13.0D, 15.0D, 11.0D, 15.0D), BooleanOp.OR);
-        shape = Shapes.join(shape, box(3.0D, 8.0D, 0.0D, 13.0D, 11.0D, 2.0D), BooleanOp.OR);
-        shape = Shapes.join(shape, box(3.0D, 8.0D, 14.0D, 13.0D, 11.0D, 16.0D), BooleanOp.OR);
-        shape = Shapes.join(shape, box(0.0D, 8.0D, 3.0D, 2.0D, 11.0D, 13.0D), BooleanOp.OR);
-        shape = Shapes.join(shape, box(14.0D, 8.0D, 3.0D, 16.0D, 11.0D, 13.0D), BooleanOp.OR);
-        shape = Shapes.join(shape, box(2.0D, 15.0D, 2.0D, 14.0D, 16.0D, 14.0D), BooleanOp.OR);
+        shape = joinRotatedBox(shape, facing, 3.0D, 8.0D, 0.0D, 13.0D, 11.0D, 2.0D);
+        shape = joinRotatedBox(shape, facing, 2.0D, 15.0D, 2.0D, 10.0D, 16.0D, 11.0D);
+        shape = joinRotatedBox(shape, facing, 11.0D, 15.0D, 3.0D, 14.0D, 16.0D, 4.0D);
+        shape = joinRotatedBox(shape, facing, 12.0D, 15.0D, 5.0D, 13.0D, 16.0D, 8.0D);
         return shape.optimize();
+    }
+
+    private static VoxelShape joinRotatedBox(VoxelShape shape, Direction facing, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+        VoxelShape rotated = switch (facing) {
+            case EAST -> box(16.0D - maxZ, minY, minX, 16.0D - minZ, maxY, maxX);
+            case SOUTH -> box(16.0D - maxX, minY, 16.0D - maxZ, 16.0D - minX, maxY, 16.0D - minZ);
+            case WEST -> box(minZ, minY, 16.0D - maxX, maxZ, maxY, 16.0D - minX);
+            default -> box(minX, minY, minZ, maxX, maxY, maxZ);
+        };
+        return Shapes.join(shape, rotated, BooleanOp.OR);
     }
 }
