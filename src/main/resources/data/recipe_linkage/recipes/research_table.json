@@ -7,12 +7,11 @@
   ],
   "key": {
     "P": { "item": "minecraft:paper" },
-    "C": { "item": "minecraft:copper_ingot" },
+    "C": { "item": "minecraft:ink_sac" },
     "W": { "tag": "minecraft:planks" },
-    "I": { "item": "minecraft:iron_ingot" }
+    "I": { "item": "minecraft:stick" }
   },
   "result": {
     "item": "recipe_linkage:research_table"
   }
 }
-

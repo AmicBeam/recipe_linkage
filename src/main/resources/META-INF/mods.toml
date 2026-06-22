@@ -6,7 +6,7 @@ license="${mod_license}"
 modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_display_name}"
-displayURL="https://example.invalid/recipe-linkage"
+displayURL="https://github.com/AmicBeam/recipe_linkage"
 logoFile="logo.png"
 credits="Designed for data-driven modpack progression."
 authors="${mod_authors}"
@@ -39,4 +39,3 @@ mandatory=false
 versionRange="[1,)"
 ordering="AFTER"
 side="BOTH"
-
