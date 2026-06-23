@@ -7,6 +7,7 @@ import com.amicbeam.recipelinkage.registry.ModBlockEntities;
 import com.amicbeam.recipelinkage.research.ResearchSampleData;
 import com.amicbeam.recipelinkage.stage.StageAwarder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -22,11 +23,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
 public class ResearchTableBlockEntity extends BlockEntity implements MenuProvider {
@@ -56,7 +54,6 @@ public class ResearchTableBlockEntity extends BlockEntity implements MenuProvide
             setChanged();
         }
     };
-    private final LazyOptional<IItemHandler> itemHandler = LazyOptional.of(() -> inventory);
 
     public ResearchTableBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.RESEARCH_TABLE.get(), pos, state);
@@ -128,28 +125,14 @@ public class ResearchTableBlockEntity extends BlockEntity implements MenuProvide
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        tag.put(TAG_INVENTORY, inventory.serializeNBT());
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.put(TAG_INVENTORY, inventory.serializeNBT(registries));
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        inventory.deserializeNBT(tag.getCompound(TAG_INVENTORY));
-    }
-
-    @Override
-    public void invalidateCaps() {
-        super.invalidateCaps();
-        itemHandler.invalidate();
-    }
-
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable net.minecraft.core.Direction side) {
-        if (capability == ForgeCapabilities.ITEM_HANDLER) {
-            return itemHandler.cast();
-        }
-        return super.getCapability(capability, side);
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        inventory.deserializeNBT(registries, tag.getCompound(TAG_INVENTORY));
     }
 }

@@ -1,8 +1,8 @@
 # 配方研究台 / Recipe Linkage
 
-配方研究台是一个面向 Minecraft 1.20.1 Forge 整合包的研究与阶段解锁模组。它提供一个一格空间的研究台方块和纸质风格的研究样本物品，让整合包作者用数据包定义“材料关联”谜题。
+配方研究台是一个面向 Minecraft 1.21.1 NeoForge 整合包的研究与阶段解锁模组。它提供一个研究台方块和纸质风格的研究样本物品，让整合包作者用数据包定义“材料关联”谜题。
 
-玩家将研究样本放入研究台后，样本会生成并保存一张固定的路线图。玩家沿着已显露的节点提交对应材料，逐步连接到可见的终点。节点材料可写为具体物品、物品标签，或带 NBT 的物品栈条件。终点本身不需要提交物品；当已提交节点与终点连通时，研究完成，并可解锁对应的 AStages 阶段。
+玩家将研究样本放入研究台后，样本会生成并保存一张固定的路线图。玩家沿着已显露的节点提交对应材料，逐步连接到可见的终点。节点材料可写为具体物品、物品标签，或带自定义数据的物品栈条件。终点本身不需要提交物品；当已提交节点与终点连通时，研究完成，并可解锁对应的 AStages 阶段。
 
 ## 玩法特点
 
@@ -31,27 +31,48 @@
 data/<namespace>/recipe_linkage/researches/<path>.json
 ```
 
-研究样本通过 NBT 绑定到某个研究定义，例如：
+研究样本通过 `minecraft:custom_data` 绑定到某个研究定义，例如：
 
 ```mcfunction
-/give @p recipe_linkage:research_sample{RecipeLinkage:{Research:"modpack:resonant_core"}}
+/give @p recipe_linkage:research_sample[minecraft:custom_data={RecipeLinkage:{Research:"modpack:resonant_core"}}]
+```
+
+如果希望研究完成后解锁红石比较器配方，可以让研究 JSON 的 `target_stage` 与 KubeJS 脚本中的阶段名保持一致。以下示例需要 AStages 和 KubeJS：
+
+```js
+// kubejs/server_scripts/recipe_linkage_stages.js
+AStages.addRestrictionForRecipe(
+  'recipe_linkage:redstone_optics_comparator',
+  'redstone_optics',
+  'minecraft:crafting',
+  'minecraft:comparator'
+)
 ```
 
 完整字段说明见 `docs/DATAPACK_FORMAT.md`。仓库中也包含一个仅使用原版物品的示例数据包：`examples/vanilla_linkage_datapack`。
 
 研究标题使用 Minecraft 文本组件格式，整合包可写 `{ "translate": "...", "fallback": "..." }`。对应语言文件属于客户端资源，需放在资源包或 KubeJS assets 中，例如 `assets/<namespace>/lang/zh_cn.json`。
 
-## 可选联动
+## 配置说明
 
+整合包和服务器可以在 `config/recipe_linkage-common.toml` 中调整行为：
+
+- `autoAwardStageOnCompletion`：默认 `true`，研究完成后自动授予配置的阶段。
+- `consumeCompletedSampleOnClaim`：默认 `false`，控制右键领取已完成样本时是否消耗样本。
+- `revealCompletedGraph`：默认 `false`，控制研究完成后是否显示完整生成路线图。
+- `enableSophisticatedBackpackMaterials`：默认 `true`，允许提交材料时从玩家携带的 Sophisticated Backpacks 中扣除匹配物品。
+
+## 阶段与辅助联动
+
+- AStages：作为研究完成后的阶段产物。
 - JEI：鼠标悬停在待提交节点上时，可用 JEI 查询对应材料来源。
-- AStages：研究完成时授予配置的阶段。
 - Sophisticated Backpacks：提交材料时可从玩家携带的 Sophisticated Backpacks 背包内取材。
 
 ---
 
-Recipe Linkage is a research and progression mod for Minecraft 1.20.1 Forge modpacks. It adds a one-block research table and paper-like research samples, allowing pack authors to define material-linkage puzzles through datapacks.
+Recipe Linkage is a research and progression mod for Minecraft 1.21.1 NeoForge modpacks. It adds a research table block and paper-like research samples, allowing pack authors to define material-linkage puzzles through datapacks.
 
-When a player inserts a research sample into the table, the sample generates and stores a fixed route graph. The player submits matching materials along revealed nodes until their reached path connects to the visible final target. Node materials can be concrete items, item tags, or NBT-bearing stack requirements. The target node itself does not consume an item. Completing the graph can unlock an AStages stage.
+When a player inserts a research sample into the table, the sample generates and stores a fixed route graph. The player submits matching materials along revealed nodes until their reached path connects to the visible final target. Node materials can be concrete items, item tags, or custom-data stack requirements. The target node itself does not consume an item. Completing the graph can unlock an AStages stage.
 
 ## Features
 
@@ -80,18 +101,39 @@ Research definition files are loaded from:
 data/<namespace>/recipe_linkage/researches/<path>.json
 ```
 
-A research sample is bound to a definition with NBT, for example:
+A research sample is bound to a definition with `minecraft:custom_data`, for example:
 
 ```mcfunction
-/give @p recipe_linkage:research_sample{RecipeLinkage:{Research:"modpack:resonant_core"}}
+/give @p recipe_linkage:research_sample[minecraft:custom_data={RecipeLinkage:{Research:"modpack:resonant_core"}}]
+```
+
+To unlock the redstone comparator recipe through research, use the same stage string in the research JSON and in the KubeJS recipe gate. This example requires AStages and KubeJS:
+
+```js
+// kubejs/server_scripts/recipe_linkage_stages.js
+AStages.addRestrictionForRecipe(
+  'recipe_linkage:redstone_optics_comparator',
+  'redstone_optics',
+  'minecraft:crafting',
+  'minecraft:comparator'
+)
 ```
 
 See `docs/DATAPACK_FORMAT.md` for the full format. A vanilla-only example datapack is included at `examples/vanilla_linkage_datapack`.
 
 Research titles use Minecraft text components. Packs can define `{ "translate": "...", "fallback": "..." }`; the matching language files are client assets and should live in a resource pack or KubeJS assets such as `assets/<namespace>/lang/en_us.json`.
 
-## Optional Integrations
+## Configuration
 
+Pack and server owners can tune behavior in `config/recipe_linkage-common.toml`:
+
+- `autoAwardStageOnCompletion`: default `true`, grants the configured stage when research is completed.
+- `consumeCompletedSampleOnClaim`: default `false`, controls whether right-click claiming consumes a completed sample.
+- `revealCompletedGraph`: default `false`, controls whether completed research reveals the full generated graph.
+- `enableSophisticatedBackpackMaterials`: default `true`, allows material submissions to pull from carried Sophisticated Backpacks.
+
+## Progression And QoL Integrations
+
+- AStages: the progression output for completed research.
 - JEI: hover a submit-ready node and use JEI lookup for the required material.
-- AStages: grant the configured stage when a research graph is completed.
 - Sophisticated Backpacks: material submissions can consume matching items from carried Sophisticated Backpacks.

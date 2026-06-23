@@ -2,6 +2,8 @@ package com.amicbeam.recipelinkage.research;
 
 import com.amicbeam.recipelinkage.config.RecipeLinkageConfig;
 import com.amicbeam.recipelinkage.data.ResearchManager;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -12,9 +14,10 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.item.component.CustomData;
+import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
 
 import java.util.Optional;
 
@@ -42,11 +45,11 @@ public final class ResearchSampleData {
     }
 
     public static void bind(ItemStack stack, ResourceLocation researchId) {
-        CompoundTag itemTag = stack.getOrCreateTag();
+        CompoundTag itemTag = customData(stack);
         CompoundTag root = itemTag.getCompound(ROOT);
         root.putString(TAG_RESEARCH, researchId.toString());
         itemTag.put(ROOT, root);
-        stack.setTag(itemTag);
+        setCustomData(stack, itemTag);
     }
 
     public static boolean hasGraph(ItemStack stack) {
@@ -54,7 +57,7 @@ public final class ResearchSampleData {
     }
 
     public static boolean ensureGraph(ItemStack stack, ServerLevel level) {
-        CompoundTag itemTag = stack.getOrCreateTag();
+        CompoundTag itemTag = customData(stack);
         CompoundTag root = itemTag.getCompound(ROOT);
         if (root.contains(TAG_GRAPH, Tag.TAG_COMPOUND)) {
             return true;
@@ -75,7 +78,7 @@ public final class ResearchSampleData {
         root.putLong(TAG_SEED, seed);
         root.put(TAG_GRAPH, graph.toTag());
         itemTag.put(ROOT, root);
-        stack.setTag(itemTag);
+        setCustomData(stack, itemTag);
         return true;
     }
 
@@ -180,9 +183,8 @@ public final class ResearchSampleData {
     }
 
     private static int countBackpackItems(ItemStack backpack, ResearchMaterial material, int limit) {
-        return backpack.getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .map(handler -> countHandlerItems(handler, material, limit))
-                .orElse(0);
+        IItemHandler handler = backpack.getCapability(Capabilities.ItemHandler.ITEM);
+        return handler == null ? 0 : countHandlerItems(handler, material, limit);
     }
 
     private static int countHandlerItems(IItemHandler handler, ResearchMaterial material, int limit) {
@@ -207,9 +209,8 @@ public final class ResearchSampleData {
     }
 
     private static int consumeBackpackItems(ItemStack backpack, ResearchMaterial material, int count) {
-        return backpack.getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .map(handler -> consumeHandlerItems(handler, material, count))
-                .orElse(count);
+        IItemHandler handler = backpack.getCapability(Capabilities.ItemHandler.ITEM);
+        return handler == null ? count : consumeHandlerItems(handler, material, count);
     }
 
     private static int consumeHandlerItems(IItemHandler handler, ResearchMaterial material, int count) {
@@ -224,29 +225,36 @@ public final class ResearchSampleData {
     }
 
     private static boolean isSophisticatedBackpack(ItemStack stack) {
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        if (!ModList.get().isLoaded("sophisticatedbackpacks")) {
+            return false;
+        }
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id != null && "sophisticatedbackpacks".equals(id.getNamespace());
     }
 
     private static void writeGraph(ItemStack stack, ResearchGraph graph) {
-        CompoundTag itemTag = stack.getOrCreateTag();
+        CompoundTag itemTag = customData(stack);
         CompoundTag root = itemTag.getCompound(ROOT);
         root.put(TAG_GRAPH, graph.toTag());
         itemTag.put(ROOT, root);
-        stack.setTag(itemTag);
+        setCustomData(stack, itemTag);
     }
 
     private static CompoundTag root(ItemStack stack) {
-        CompoundTag itemTag = stack.getTag();
-        if (itemTag == null) {
-            return new CompoundTag();
-        }
-        return itemTag.getCompound(ROOT);
+        return customData(stack).getCompound(ROOT);
+    }
+
+    private static CompoundTag customData(ItemStack stack) {
+        return stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+    }
+
+    private static void setCustomData(ItemStack stack, CompoundTag tag) {
+        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
     }
 
     @SuppressWarnings("unused")
     private static Item item(ResourceLocation id) {
-        return ForgeRegistries.ITEMS.getValue(id);
+        return BuiltInRegistries.ITEM.get(id);
     }
 
     public record UnlockResult(boolean success, boolean completed, String stage, Optional<Component> message) {

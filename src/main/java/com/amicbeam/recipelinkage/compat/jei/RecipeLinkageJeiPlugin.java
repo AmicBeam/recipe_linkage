@@ -18,7 +18,7 @@ public class RecipeLinkageJeiPlugin implements IModPlugin {
 
     @Override
     public ResourceLocation getPluginUid() {
-        return new ResourceLocation(RecipeLinkage.MOD_ID, "jei");
+        return RecipeLinkage.id("jei");
     }
 
     @Override
@@ -47,4 +47,3 @@ public class RecipeLinkageJeiPlugin implements IModPlugin {
         return true;
     }
 }
-

@@ -4,7 +4,7 @@ import com.amicbeam.recipelinkage.block.entity.ResearchTableBlockEntity;
 import com.amicbeam.recipelinkage.item.ResearchSampleItem;
 import com.amicbeam.recipelinkage.registry.ModMenus;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -12,7 +12,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.items.SlotItemHandler;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
 public class ResearchTableMenu extends AbstractContainerMenu {
     private static final int MACHINE_SLOTS = 1;
@@ -22,7 +22,7 @@ public class ResearchTableMenu extends AbstractContainerMenu {
     private final ResearchTableBlockEntity table;
     private final ContainerLevelAccess access;
 
-    public ResearchTableMenu(int containerId, Inventory playerInventory, FriendlyByteBuf data) {
+    public ResearchTableMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf data) {
         this(containerId, playerInventory, blockEntity(playerInventory, data.readBlockPos()));
     }
 

@@ -2,11 +2,13 @@ package com.amicbeam.recipelinkage.block;
 
 import com.amicbeam.recipelinkage.block.entity.ResearchTableBlockEntity;
 import com.amicbeam.recipelinkage.registry.ModBlockEntities;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -27,10 +29,10 @@ import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
 public class ResearchTableBlock extends BaseEntityBlock {
+    public static final MapCodec<ResearchTableBlock> CODEC = simpleCodec(ResearchTableBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     private static final VoxelShape SHAPE_NORTH = makeShape(Direction.NORTH);
     private static final VoxelShape SHAPE_EAST = makeShape(Direction.EAST);
@@ -40,6 +42,11 @@ public class ResearchTableBlock extends BaseEntityBlock {
     public ResearchTableBlock(Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
     }
 
     @Override
@@ -71,20 +78,30 @@ public class ResearchTableBlock extends BaseEntityBlock {
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (!(blockEntity instanceof ResearchTableBlockEntity table)) {
-            return InteractionResult.PASS;
-        }
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
-            table.ensureSampleGraph(serverPlayer);
-            NetworkHooks.openScreen(serverPlayer, table, pos);
-        }
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        openTable(level, pos, player);
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        openTable(level, pos, player);
+        return ItemInteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    private static void openTable(Level level, BlockPos pos, Player player) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (!(blockEntity instanceof ResearchTableBlockEntity table)) {
+            return;
+        }
+        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+            table.ensureSampleGraph(serverPlayer);
+            serverPlayer.openMenu(table, pos);
+        }
+    }
+
+    @Override
+    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
         if (!state.is(newState.getBlock())) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof ResearchTableBlockEntity table) {
@@ -103,7 +120,7 @@ public class ResearchTableBlock extends BaseEntityBlock {
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return switch (state.getValue(FACING)) {
             case EAST -> SHAPE_EAST;
             case SOUTH -> SHAPE_SOUTH;

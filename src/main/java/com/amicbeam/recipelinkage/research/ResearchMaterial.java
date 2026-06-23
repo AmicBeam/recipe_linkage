@@ -1,5 +1,8 @@
 package com.amicbeam.recipelinkage.research;
 
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
@@ -8,12 +11,11 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.tags.ITagManager;
+import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.Nullable;
 
 public record ResearchMaterial(ResourceLocation id, boolean tag, int count, @Nullable CompoundTag nbt) {
-    private static final ResourceLocation FALLBACK_ITEM = new ResourceLocation("minecraft", "barrier");
+    private static final ResourceLocation FALLBACK_ITEM = ResourceLocation.fromNamespaceAndPath("minecraft", "barrier");
     private static final String KIND_ITEM = "item";
     private static final String KIND_TAG = "tag";
 
@@ -45,31 +47,34 @@ public record ResearchMaterial(ResourceLocation id, boolean tag, int count, @Nul
                 return false;
             }
         } else {
-            Item item = ForgeRegistries.ITEMS.getValue(id);
+            Item item = BuiltInRegistries.ITEM.get(id);
             if (item == null || !stack.is(item)) {
                 return false;
             }
         }
-        return nbt == null || NbtUtils.compareNbt(nbt, stack.getTag(), true);
+        if (nbt == null) {
+            return true;
+        }
+        CompoundTag stackTag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        return NbtUtils.compareNbt(nbt, stackTag, true);
     }
 
     public ItemStack displayStack() {
         ItemStack stack = new ItemStack(displayItem(), count);
         if (nbt != null) {
-            stack.setTag(nbt.copy());
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
         }
         return stack;
     }
 
     private Item displayItem() {
         if (tag) {
-            ITagManager<Item> tags = ForgeRegistries.ITEMS.tags();
-            if (tags != null) {
-                return tags.getTag(ItemTags.create(id)).stream().findFirst().orElse(Items.BARRIER);
-            }
-            return Items.BARRIER;
+            return BuiltInRegistries.ITEM.getTag(ItemTags.create(id))
+                    .flatMap(tag -> tag.stream().findFirst())
+                    .map(Holder::value)
+                    .orElse(Items.BARRIER);
         }
-        Item item = ForgeRegistries.ITEMS.getValue(id);
+        Item item = BuiltInRegistries.ITEM.get(id);
         return item == null ? Items.BARRIER : item;
     }
 

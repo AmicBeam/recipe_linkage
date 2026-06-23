@@ -11,15 +11,17 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,8 +89,9 @@ public class ResearchManager extends SimpleJsonResourceReloadListener {
             return Component.literal(id.toString());
         }
         try {
-            Component title = Component.Serializer.fromJson(object.get("title"));
-            return title == null ? Component.literal(id.toString()) : title;
+            return ComponentSerialization.CODEC
+                    .parse(JsonOps.INSTANCE, object.get("title"))
+                    .getOrThrow(JsonParseException::new);
         } catch (JsonParseException ex) {
             throw new JsonSyntaxException("Invalid title component: " + ex.getMessage(), ex);
         }
@@ -172,7 +175,7 @@ public class ResearchManager extends SimpleJsonResourceReloadListener {
             if (nodeIds.put(node.id(), i) != null) {
                 throw new IllegalArgumentException("duplicate node id " + node.id());
             }
-            if (!node.material().tag() && !ForgeRegistries.ITEMS.containsKey(node.material().id())) {
+            if (!node.material().tag() && !BuiltInRegistries.ITEM.containsKey(node.material().id())) {
                 throw new IllegalArgumentException("node " + node.id() + " references missing item " + node.material().id());
             }
         }

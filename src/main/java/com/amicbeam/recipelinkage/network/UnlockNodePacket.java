@@ -1,27 +1,29 @@
 package com.amicbeam.recipelinkage.network;
 
+import com.amicbeam.recipelinkage.RecipeLinkage;
 import com.amicbeam.recipelinkage.block.entity.ResearchTableBlockEntity;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.function.Supplier;
+public record UnlockNodePacket(BlockPos pos, int nodeIndex) implements CustomPacketPayload {
+    public static final Type<UnlockNodePacket> TYPE = new Type<>(RecipeLinkage.id("unlock_node"));
+    public static final StreamCodec<ByteBuf, UnlockNodePacket> STREAM_CODEC = StreamCodec.composite(
+            BlockPos.STREAM_CODEC,
+            UnlockNodePacket::pos,
+            ByteBufCodecs.VAR_INT,
+            UnlockNodePacket::nodeIndex,
+            UnlockNodePacket::new);
 
-public record UnlockNodePacket(BlockPos pos, int nodeIndex) {
-    public static void encode(UnlockNodePacket packet, FriendlyByteBuf buf) {
-        buf.writeBlockPos(packet.pos);
-        buf.writeVarInt(packet.nodeIndex);
-    }
-
-    public static UnlockNodePacket decode(FriendlyByteBuf buf) {
-        return new UnlockNodePacket(buf.readBlockPos(), buf.readVarInt());
-    }
-
-    public static void handle(UnlockNodePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
+    public static void handle(UnlockNodePacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
+            if (!(context.player() instanceof ServerPlayer player)) {
+                return;
+            }
             if (player == null || player.distanceToSqr(packet.pos.getX() + 0.5D, packet.pos.getY() + 0.5D, packet.pos.getZ() + 0.5D) > 64.0D) {
                 return;
             }
@@ -29,7 +31,10 @@ public record UnlockNodePacket(BlockPos pos, int nodeIndex) {
                 table.unlockNode(player, packet.nodeIndex);
             }
         });
-        context.setPacketHandled(true);
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }
-

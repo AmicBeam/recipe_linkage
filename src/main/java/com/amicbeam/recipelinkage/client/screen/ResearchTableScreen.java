@@ -3,7 +3,6 @@ package com.amicbeam.recipelinkage.client.screen;
 import com.amicbeam.recipelinkage.RecipeLinkage;
 import com.amicbeam.recipelinkage.client.JeiBridge;
 import com.amicbeam.recipelinkage.menu.ResearchTableMenu;
-import com.amicbeam.recipelinkage.network.ModNetwork;
 import com.amicbeam.recipelinkage.network.UnlockNodePacket;
 import com.amicbeam.recipelinkage.research.ResearchGraph;
 import com.amicbeam.recipelinkage.research.ResearchSampleData;
@@ -15,6 +14,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.ChatFormatting;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMenu> {
-    private static final ResourceLocation BACKGROUND = new ResourceLocation(RecipeLinkage.MOD_ID, "textures/gui/research_table.png");
+    private static final ResourceLocation BACKGROUND = RecipeLinkage.id("textures/gui/research_table.png");
     private static final int TEXT = 0xFF3A2A1C;
     private static final int MUTED = 0xFF72573B;
     private static final int LINE_UNLOCKED = 0xFFB8873A;
@@ -67,7 +67,7 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         hoveredNode = null;
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderGraphTooltip(guiGraphics, mouseX, mouseY);
@@ -166,7 +166,7 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
             if (!graphDragMoved) {
                 Optional<HoveredNode> clicked = hoveredNodeAt(mouseX, mouseY);
                 if (clicked.isPresent() && clicked.get().available()) {
-                    ModNetwork.CHANNEL.sendToServer(new UnlockNodePacket(menu.blockPos(), clicked.get().index()));
+                    PacketDistributor.sendToServer(new UnlockNodePacket(menu.blockPos(), clicked.get().index()));
                 }
             }
             return true;
@@ -175,7 +175,7 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         Optional<ResearchGraph> graph = ResearchSampleData.graph(menu.sampleStack());
         if (isInsidePanel(mouseX, mouseY) && graph.isPresent()) {
             ensureView(graph.get());
@@ -183,13 +183,13 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
             double panelTop = topPos + PANEL_Y;
             double worldX = (mouseX - panelLeft - viewOffsetX) / viewScale;
             double worldY = (mouseY - panelTop - viewOffsetY) / viewScale;
-            double factor = delta > 0.0D ? ZOOM_STEP : 1.0D / ZOOM_STEP;
+            double factor = scrollY > 0.0D ? ZOOM_STEP : 1.0D / ZOOM_STEP;
             viewScale = Mth.clamp(viewScale * factor, MIN_ZOOM, MAX_ZOOM);
             viewOffsetX = mouseX - panelLeft - worldX * viewScale;
             viewOffsetY = mouseY - panelTop - worldY * viewScale;
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
@@ -382,7 +382,7 @@ public class ResearchTableScreen extends AbstractContainerScreen<ResearchTableMe
 
     private String viewKey(ResearchGraph graph) {
         StringBuilder builder = new StringBuilder();
-        builder.append(Component.Serializer.toJson(graph.title())).append('|').append(graph.stage()).append('|')
+        builder.append(graph.title().getString()).append('|').append(graph.stage()).append('|')
                 .append(graph.startIndex()).append('|').append(graph.targetIndex()).append('|');
         for (ResearchGraph.Node node : graph.nodes()) {
             builder.append(node.id()).append('@').append(node.x()).append(',').append(node.y()).append(';');

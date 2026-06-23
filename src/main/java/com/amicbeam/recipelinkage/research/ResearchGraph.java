@@ -1,11 +1,15 @@
 package com.amicbeam.recipelinkage.research;
 
 import com.amicbeam.recipelinkage.config.RecipeLinkageConfig;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayDeque;
@@ -228,7 +232,7 @@ public class ResearchGraph {
 
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
-        tag.putString("Title", Component.Serializer.toJson(title));
+        tag.putString("Title", titleToJson(title));
         tag.putString("Stage", stage);
         tag.putInt("Start", startIndex);
         tag.putInt("Target", targetIndex);
@@ -314,11 +318,19 @@ public class ResearchGraph {
             return Component.empty();
         }
         try {
-            Component parsed = Component.Serializer.fromJson(title);
-            return parsed == null ? Component.literal(title) : parsed;
+            return ComponentSerialization.CODEC
+                    .parse(JsonOps.INSTANCE, JsonParser.parseString(title))
+                    .getOrThrow(JsonParseException::new);
         } catch (JsonParseException ex) {
             return Component.literal(title);
         }
+    }
+
+    private static String titleToJson(Component title) {
+        JsonElement json = ComponentSerialization.CODEC
+                .encodeStart(JsonOps.INSTANCE, title)
+                .getOrThrow(JsonParseException::new);
+        return json.toString();
     }
 
     public record Node(String id, ResearchMaterial material, int x, int y, boolean unlocked) {

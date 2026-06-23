@@ -1,7 +1,7 @@
 package com.amicbeam.recipelinkage.client;
 
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 import org.lwjgl.glfw.GLFW;
 
 public final class JeiBridge {
@@ -21,4 +21,3 @@ public final class JeiBridge {
         }
     }
 }
-

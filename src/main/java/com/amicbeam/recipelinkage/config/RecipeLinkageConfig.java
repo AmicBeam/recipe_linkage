@@ -1,16 +1,16 @@
 package com.amicbeam.recipelinkage.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class RecipeLinkageConfig {
-    public static final ForgeConfigSpec COMMON_SPEC;
-    public static final ForgeConfigSpec.BooleanValue REVEAL_COMPLETED_GRAPH;
-    public static final ForgeConfigSpec.BooleanValue AUTO_AWARD_STAGE_ON_COMPLETION;
-    public static final ForgeConfigSpec.BooleanValue CONSUME_COMPLETED_SAMPLE_ON_CLAIM;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_SOPHISTICATED_BACKPACK_MATERIALS;
+    public static final ModConfigSpec COMMON_SPEC;
+    public static final ModConfigSpec.BooleanValue REVEAL_COMPLETED_GRAPH;
+    public static final ModConfigSpec.BooleanValue AUTO_AWARD_STAGE_ON_COMPLETION;
+    public static final ModConfigSpec.BooleanValue CONSUME_COMPLETED_SAMPLE_ON_CLAIM;
+    public static final ModConfigSpec.BooleanValue ENABLE_SOPHISTICATED_BACKPACK_MATERIALS;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("progression");
         AUTO_AWARD_STAGE_ON_COMPLETION = builder
                 .comment("When true, completing a research graph immediately grants the configured AStages stage.")

@@ -8,13 +8,28 @@ data/<namespace>/recipe_linkage/researches/<path>.json
 
 The base mod intentionally ships no research definitions and no way to obtain bound research samples. Packs should issue samples through quests, loot, commands, KubeJS, or other progression systems.
 
-## Sample Item NBT
+## Sample Item Data
 
 ```text
-/give @p recipe_linkage:research_sample{RecipeLinkage:{Research:"modpack:resonant_core"}}
+/give @p recipe_linkage:research_sample[minecraft:custom_data={RecipeLinkage:{Research:"modpack:resonant_core"}}]
 ```
 
 The first time the sample is inserted into a research table, the generated graph is written into the same item stack. Removing the sample does not reset progress, refund items, or reroll the route graph.
+
+## AStages + KubeJS Recipe Gate Example
+
+Use the same stage string in the research `target_stage` and in your recipe gate script. For example, if a research uses `"target_stage": "basic_optics"`, this KubeJS script can make the vanilla redstone comparator recipe require that AStages stage:
+
+```js
+// kubejs/server_scripts/recipe_linkage_stages.js
+// Requires: AStages, KubeJS
+AStages.addRestrictionForRecipe(
+  'recipe_linkage:basic_optics_comparator',
+  'basic_optics',
+  'minecraft:crafting',
+  'minecraft:comparator'
+)
+```
 
 ## Research Definition
 
@@ -57,7 +72,7 @@ The first time the sample is inserted into a research table, the generated graph
 - `generation_attempts`: number of weighted graph candidates to generate before taking the best-scored one.
 - `nodes[]`: each node must contain exactly one material key, either `item` or `tag`, following the same style as recipe ingredient objects. Use `item` for one concrete item id, or `tag` for an item tag id.
 - `nodes[].count`: material count consumed when unlocking that node. Defaults to `1`.
-- `nodes[].nbt`: optional SNBT string matched against submitted stacks, for example `{Damage:0}` or `{"Potion":"minecraft:water"}`. The specified NBT must be present; unrelated extra NBT on the submitted stack is allowed.
+- `nodes[].nbt`: optional SNBT string matched against the submitted stack's `minecraft:custom_data`, for example `{"recipe_linkage_note":"optics"}`. The specified data must be present; unrelated extra custom data on the submitted stack is allowed.
 - Tag nodes accept any item in the tag. Their graph icon is the first registered item in that tag.
 - `nodes[].x` and `nodes[].y`: optional percentage coordinates used as fixed layout anchors. Provide both fields to pin a node. If either field is omitted, the node is placed by the automatic layout.
 - Automatic layout: generated after the route graph, initial nodes, and target are known. It places the start side on the left, the target on the right, groups nodes by graph distance, and uses a compact football-shaped vertical spread. A few cheap ordering and overlap passes are applied to reduce crossing lines and icon overlap.

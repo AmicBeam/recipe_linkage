@@ -2,7 +2,7 @@ package com.amicbeam.recipelinkage.stage;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 
 public final class StageAwarder {
     private StageAwarder() {
@@ -25,4 +25,3 @@ public final class StageAwarder {
         return true;
     }
 }
-
