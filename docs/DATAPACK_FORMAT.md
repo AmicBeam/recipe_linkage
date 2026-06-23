@@ -77,4 +77,7 @@ Example language file:
 
 The common config file includes:
 
+- `progression.autoAwardStageOnCompletion`: defaults to `true`. When `true`, completing a research graph immediately grants the configured AStages stage.
+- `progression.consumeCompletedSampleOnClaim`: defaults to `false`. When `true`, right-clicking a completed research sample to claim its stage consumes the sample.
 - `client_behavior.revealCompletedGraph`: defaults to `false`. When `true`, completed samples reveal every generated node and edge in the research graph.
+- `integrations.enableSophisticatedBackpackMaterials`: defaults to `true`. When `true`, material submissions can consume matching items from Sophisticated Backpacks carried by the player.

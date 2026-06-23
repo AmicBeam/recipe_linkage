@@ -10,6 +10,7 @@
   "tooltip.recipe_linkage.sample.completed": "Completed",
   "tooltip.recipe_linkage.sample.incomplete": "In progress",
   "tooltip.recipe_linkage.sample.use_completed": "Right-click to claim its stage.",
+  "tooltip.recipe_linkage.sample.use_completed_consume": "Right-click to claim its stage and consume this sample.",
   "message.recipe_linkage.research.missing": "This research sample has no loaded datapack definition.",
   "message.recipe_linkage.research.generated": "The research graph was fixed onto the sample.",
   "message.recipe_linkage.research.completed": "Research completed: %s",

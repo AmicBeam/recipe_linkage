@@ -1,5 +1,6 @@
 package com.amicbeam.recipelinkage.item;
 
+import com.amicbeam.recipelinkage.config.RecipeLinkageConfig;
 import com.amicbeam.recipelinkage.data.ResearchManager;
 import com.amicbeam.recipelinkage.research.ResearchSampleData;
 import com.amicbeam.recipelinkage.stage.StageAwarder;
@@ -41,8 +42,12 @@ public class ResearchSampleItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide && player instanceof ServerPlayer serverPlayer && ResearchSampleData.isCompleted(stack)) {
             String stage = ResearchSampleData.stage(stack);
-            StageAwarder.award(serverPlayer, stage);
-            serverPlayer.displayClientMessage(Component.translatable("message.recipe_linkage.research.claimed", stage), true);
+            if (StageAwarder.award(serverPlayer, stage)) {
+                serverPlayer.displayClientMessage(Component.translatable("message.recipe_linkage.research.claimed", stage), true);
+                if (RecipeLinkageConfig.CONSUME_COMPLETED_SAMPLE_ON_CLAIM.get() && !serverPlayer.getAbilities().instabuild) {
+                    stack.shrink(1);
+                }
+            }
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.pass(stack);
@@ -62,7 +67,10 @@ public class ResearchSampleItem extends Item {
                     : "tooltip.recipe_linkage.sample.incomplete").withStyle(ResearchSampleData.isCompleted(stack) ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
         }
         if (ResearchSampleData.isCompleted(stack)) {
-            tooltip.add(Component.translatable("tooltip.recipe_linkage.sample.use_completed").withStyle(ChatFormatting.DARK_GREEN));
+            String key = RecipeLinkageConfig.CONSUME_COMPLETED_SAMPLE_ON_CLAIM.get()
+                    ? "tooltip.recipe_linkage.sample.use_completed_consume"
+                    : "tooltip.recipe_linkage.sample.use_completed";
+            tooltip.add(Component.translatable(key).withStyle(ChatFormatting.DARK_GREEN));
         }
     }
 }

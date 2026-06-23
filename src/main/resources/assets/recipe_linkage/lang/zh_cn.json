@@ -10,6 +10,7 @@
   "tooltip.recipe_linkage.sample.completed": "已完成",
   "tooltip.recipe_linkage.sample.incomplete": "研究中",
   "tooltip.recipe_linkage.sample.use_completed": "右键使用以领取阶段。",
+  "tooltip.recipe_linkage.sample.use_completed_consume": "右键使用以领取阶段并消耗样本。",
   "message.recipe_linkage.research.missing": "这个研究样本没有对应的已载入数据包定义。",
   "message.recipe_linkage.research.generated": "研究图已固定到样本上。",
   "message.recipe_linkage.research.completed": "研究完成：%s",

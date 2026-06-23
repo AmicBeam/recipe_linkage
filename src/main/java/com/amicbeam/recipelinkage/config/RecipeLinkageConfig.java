@@ -5,10 +5,20 @@ import net.minecraftforge.common.ForgeConfigSpec;
 public final class RecipeLinkageConfig {
     public static final ForgeConfigSpec COMMON_SPEC;
     public static final ForgeConfigSpec.BooleanValue REVEAL_COMPLETED_GRAPH;
+    public static final ForgeConfigSpec.BooleanValue AUTO_AWARD_STAGE_ON_COMPLETION;
+    public static final ForgeConfigSpec.BooleanValue CONSUME_COMPLETED_SAMPLE_ON_CLAIM;
     public static final ForgeConfigSpec.BooleanValue ENABLE_SOPHISTICATED_BACKPACK_MATERIALS;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        builder.push("progression");
+        AUTO_AWARD_STAGE_ON_COMPLETION = builder
+                .comment("When true, completing a research graph immediately grants the configured AStages stage.")
+                .define("autoAwardStageOnCompletion", true);
+        CONSUME_COMPLETED_SAMPLE_ON_CLAIM = builder
+                .comment("When true, right-clicking a completed research sample to claim its stage consumes the sample.")
+                .define("consumeCompletedSampleOnClaim", false);
+        builder.pop();
         builder.push("client_behavior");
         REVEAL_COMPLETED_GRAPH = builder
                 .comment("When true, completed research samples reveal every generated graph node and edge.")

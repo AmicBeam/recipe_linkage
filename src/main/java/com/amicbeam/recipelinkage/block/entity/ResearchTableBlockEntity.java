@@ -1,5 +1,6 @@
 package com.amicbeam.recipelinkage.block.entity;
 
+import com.amicbeam.recipelinkage.config.RecipeLinkageConfig;
 import com.amicbeam.recipelinkage.item.ResearchSampleItem;
 import com.amicbeam.recipelinkage.menu.ResearchTableMenu;
 import com.amicbeam.recipelinkage.registry.ModBlockEntities;
@@ -113,7 +114,7 @@ public class ResearchTableBlockEntity extends BlockEntity implements MenuProvide
                 level.playSound(null, worldPosition, SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 0.6F, 1.45F);
             }
         }
-        if (result.completed()) {
+        if (result.completed() && RecipeLinkageConfig.AUTO_AWARD_STAGE_ON_COMPLETION.get()) {
             StageAwarder.award(player, result.stage());
         }
         return true;
