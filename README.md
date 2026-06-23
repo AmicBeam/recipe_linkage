@@ -1,129 +1,67 @@
-# 配方研究台 / Recipe Linkage
+![Recipe Linkage](docs/media/recipe-linkage-header-16x10.png)
 
-配方研究台是一个面向 Minecraft 1.21.1 NeoForge 整合包的研究与阶段解锁模组。它提供一个研究台方块和纸质风格的研究样本物品，让整合包作者用数据包定义“材料关联”谜题。
+# Recipe Linkage
 
-玩家将研究样本放入研究台后，样本会生成并保存一张固定的路线图。玩家沿着已显露的节点提交对应材料，逐步连接到可见的终点。节点材料可写为具体物品、物品标签，或带自定义数据的物品栈条件。终点本身不需要提交物品；当已提交节点与终点连通时，研究完成，并可解锁对应的 AStages 阶段。
+[中文说明](README_ZH.md)
 
-## 玩法特点
+**Recipe Linkage** is a data-driven research table mod for Minecraft NeoForge 1.21.1, with Forge 1.20.1 support.
 
-- 数据驱动：模组本体不内置任何研究样本，全部研究由数据包提供。
-- 材料关联：线索以物品图标呈现，不依赖文字谜面。
-- 固定样本：研究图生成后写入样本，取出样本不会重置路线、返还材料或重新随机。
-- 路线策略：玩家看到终点和当前可提交节点，需要用尽量少的材料打通路径，而不是暴力枚举物品。
-- 阶段联动：完成研究后通过 AStages 授予整合包阶段。
-- 易于整合：研究样本可通过任务、战利品、KubeJS、函数或其他系统发放。
+It is made for modpacks that want recipes, machines, or progression steps to feel like discoveries instead of simple quest rewards. Pack authors define research samples through datapacks, then players solve material-linkage puzzles on a dedicated research table to unlock configured progression stages.
 
-## 研究流程
+## What Does It Add?
 
-1. 整合包通过数据包定义研究图，并给玩家发放已绑定的研究样本。
-2. 玩家把研究样本放入配方研究台。
-3. 研究台生成并固定本样本的路线图。
-4. 可提交节点会显示半透明物品图标和所需数量。
-5. 玩家提交材料后，该节点变为已到达节点，并显露相邻可提交节点。
-6. 当已到达节点连接到终点时，研究完成。
-7. 已完成样本可手持右键，用于领取对应阶段。
+- A new **Recipe Research Table** block
+- Reusable **Research Samples** with persistent graph progress
+- Icon-based research graphs built from item relationships
+- Material submission puzzles with visible targets
+- AStages progression rewards for completed research
+- Optional JEI and Sophisticated Backpacks quality-of-life support
 
-## 数据包入口
+## How Research Works
 
-研究定义文件放在：
+Players insert a bound research sample into the table. The sample generates a fixed research graph and keeps that graph forever.
 
-```text
-data/<namespace>/recipe_linkage/researches/<path>.json
-```
+The target is visible, but the route must be opened by submitting related materials. Available nodes show item icons and required counts, so the puzzle is about choosing an efficient path through the graph instead of guessing a written riddle.
 
-研究样本通过 `minecraft:custom_data` 绑定到某个研究定义，例如：
+The final target node does not consume an item. Research is complete once the reached path connects to the target.
 
-```mcfunction
-/give @p recipe_linkage:research_sample[minecraft:custom_data={RecipeLinkage:{Research:"modpack:resonant_core"}}]
-```
+Completed samples can be right-clicked to claim their configured stage. Server configs can control whether stages are awarded automatically on completion and whether claimed samples are consumed.
 
-如果希望研究完成后解锁红石比较器配方，可以让研究 JSON 的 `target_stage` 与 KubeJS 脚本中的阶段名保持一致。以下示例需要 AStages 和 KubeJS：
+## Designed For Modpacks
 
-```js
-// kubejs/server_scripts/recipe_linkage_stages.js
-AStages.addRestrictionForRecipe(
-  'recipe_linkage:redstone_optics_comparator',
-  'redstone_optics',
-  'minecraft:crafting',
-  'minecraft:comparator'
-)
-```
+Recipe Linkage does not ship built-in research content. Every research is loaded from datapacks, so pack authors decide exactly what each sample represents.
 
-完整字段说明见 `docs/DATAPACK_FORMAT.md`。仓库中也包含一个仅使用原版物品的示例数据包：`examples/vanilla_linkage_datapack`。
+Research nodes can use:
 
-研究标题使用 Minecraft 文本组件格式，整合包可写 `{ "translate": "...", "fallback": "..." }`。对应语言文件属于客户端资源，需放在资源包或 KubeJS assets 中，例如 `assets/<namespace>/lang/zh_cn.json`。
+- A specific item
+- An item tag
+- A required count; omitted `count` defaults to `1`, while `count: 0` checks possession without consuming the item
+- Optional custom-data matching
+- Optional fixed coordinates, or automatic graph layout
+- Weighted edges for randomized route generation
+- Localized research titles through Minecraft text components
 
-## 配置说明
+This makes it useful for gated recipes, themed technology chains, magic discoveries, chapter milestones, or any progression where materials should hint at their own relationships.
 
-整合包和服务器可以在 `config/recipe_linkage-common.toml` 中调整行为：
+## Progression And QoL Integrations
 
-- `autoAwardStageOnCompletion`：默认 `true`，研究完成后自动授予配置的阶段。
-- `consumeCompletedSampleOnClaim`：默认 `false`，控制右键领取已完成样本时是否消耗样本。
-- `revealCompletedGraph`：默认 `false`，控制研究完成后是否显示完整生成路线图。
-- `enableSophisticatedBackpackMaterials`：默认 `true`，允许提交材料时从玩家携带的 Sophisticated Backpacks 中扣除匹配物品。
+- **AStages**: the progression output for completed research.
+- **JEI**: hover a research node and use JEI lookup for the required material.
+- **Sophisticated Backpacks**: material submissions can pull matching items from carried backpacks when enabled.
 
-## 阶段与辅助联动
+AStages gives completed samples their progression result. JEI and Sophisticated Backpacks are optional quality-of-life integrations.
 
-- AStages：作为研究完成后的阶段产物。
-- JEI：鼠标悬停在待提交节点上时，可用 JEI 查询对应材料来源。
-- Sophisticated Backpacks：提交材料时可从玩家携带的 Sophisticated Backpacks 背包内取材。
+## Important Notes
 
----
+- Research samples are not consumed by the table.
+- Removing a sample does not reset its graph.
+- Submitted materials are not refunded.
+- Generated routes do not reroll after the sample is created.
+- The base mod provides no default research samples; packs must provide them through datapacks, quests, loot, commands, KubeJS, or another delivery system.
 
-Recipe Linkage is a research and progression mod for Minecraft 1.21.1 NeoForge modpacks. It adds a research table block and paper-like research samples, allowing pack authors to define material-linkage puzzles through datapacks.
+## For Pack Authors
 
-When a player inserts a research sample into the table, the sample generates and stores a fixed route graph. The player submits matching materials along revealed nodes until their reached path connects to the visible final target. Node materials can be concrete items, item tags, or custom-data stack requirements. The target node itself does not consume an item. Completing the graph can unlock an AStages stage.
-
-## Features
-
-- Data-driven: the base mod ships no built-in research samples; all research is provided by datapacks.
-- Material linkage: clues are represented by item icons rather than written riddles.
-- Persistent samples: once a graph is generated, removing the sample does not reset progress, refund items, or reroll the route.
-- Route strategy: players see the target and available nodes, then decide which material path is worth paying for.
-- Stage integration: completed research grants modpack progression through AStages.
-- Pack-friendly delivery: bound samples can be given through quests, loot, KubeJS, functions, or other progression systems.
-
-## Research Flow
-
-1. A modpack defines research graphs through datapacks and gives players bound research samples.
-2. The player inserts a sample into the Recipe Research Table.
-3. The table generates and fixes a route graph onto that sample.
-4. Submit-ready nodes show translucent item icons and required counts.
-5. Submitting materials marks a node as reached and reveals adjacent submit-ready nodes.
-6. The research completes when reached nodes connect to the target.
-7. A completed sample can be right-clicked in hand to claim its stage.
-
-## Datapack Entry
-
-Research definition files are loaded from:
-
-```text
-data/<namespace>/recipe_linkage/researches/<path>.json
-```
-
-A research sample is bound to a definition with `minecraft:custom_data`, for example:
-
-```mcfunction
-/give @p recipe_linkage:research_sample[minecraft:custom_data={RecipeLinkage:{Research:"modpack:resonant_core"}}]
-```
-
-To unlock the redstone comparator recipe through research, use the same stage string in the research JSON and in the KubeJS recipe gate. This example requires AStages and KubeJS:
-
-```js
-// kubejs/server_scripts/recipe_linkage_stages.js
-AStages.addRestrictionForRecipe(
-  'recipe_linkage:redstone_optics_comparator',
-  'redstone_optics',
-  'minecraft:crafting',
-  'minecraft:comparator'
-)
-```
-
-See `docs/DATAPACK_FORMAT.md` for the full format. A vanilla-only example datapack is included at `examples/vanilla_linkage_datapack`.
-
-Research titles use Minecraft text components. Packs can define `{ "translate": "...", "fallback": "..." }`; the matching language files are client assets and should live in a resource pack or KubeJS assets such as `assets/<namespace>/lang/en_us.json`.
-
-## Configuration
+### Configuration
 
 Pack and server owners can tune behavior in `config/recipe_linkage-common.toml`:
 
@@ -132,8 +70,122 @@ Pack and server owners can tune behavior in `config/recipe_linkage-common.toml`:
 - `revealCompletedGraph`: default `false`, controls whether completed research reveals the full generated graph.
 - `enableSophisticatedBackpackMaterials`: default `true`, allows material submissions to pull from carried Sophisticated Backpacks.
 
-## Progression And QoL Integrations
+### Datapack Path
 
-- AStages: the progression output for completed research.
-- JEI: hover a submit-ready node and use JEI lookup for the required material.
-- Sophisticated Backpacks: material submissions can consume matching items from carried Sophisticated Backpacks.
+Research JSON files are loaded from:
+
+```text
+data/<namespace>/recipe_linkage/researches/<path>.json
+```
+
+Loaded research definitions also appear as ready-to-use bound samples in the Recipe Linkage creative tab. For command-based delivery, NeoForge 1.21.1 uses `minecraft:custom_data`:
+
+```mcfunction
+/give @p recipe_linkage:research_sample[minecraft:custom_data={RecipeLinkage:{Research:"modpack:basic_optics"}}]
+```
+
+Forge 1.20.1 uses legacy item NBT:
+
+```mcfunction
+/give @p recipe_linkage:research_sample{RecipeLinkage:{Research:"modpack:basic_optics"}}
+```
+
+### AStages + KubeJS Recipe Gate Example
+
+This example binds the redstone comparator recipe to the same `target_stage: "basic_optics"` used by the research JSON. Recipe Linkage grants that AStages stage when the research is completed; the AStages KubeJS API makes the recipe require that stage.
+
+Place this script in `kubejs/server_scripts/recipe_linkage_stages.js`:
+
+```js
+// Requires: AStages, KubeJS
+AStages.addRestrictionForRecipe(
+  'recipe_linkage:basic_optics_comparator',
+  'basic_optics',
+  'minecraft:crafting',
+  'minecraft:comparator'
+)
+```
+
+If you use the full example below with `target_stage: "redstone_lens"`, replace `basic_optics` with `redstone_lens`.
+
+### Minimal Auto-Layout Example
+
+This example omits all `x` and `y` fields. Recipe Linkage will automatically place the graph with the start side on the left and the target on the right.
+
+Save as `data/modpack/recipe_linkage/researches/basic_optics.json`:
+
+```json
+{
+  "target_stage": "basic_optics",
+  "target": "comparator",
+  "min_distance_to_target": 3,
+  "nodes": [
+    { "id": "sand", "tag": "minecraft:sand", "count": 8 },
+    { "id": "glass", "item": "minecraft:glass", "count": 3 },
+    { "id": "redstone", "item": "minecraft:redstone", "count": 4 },
+    { "id": "quartz", "item": "minecraft:quartz", "count": 2 },
+    { "id": "comparator", "item": "minecraft:comparator" }
+  ],
+  "edges": [
+    { "from": "sand", "to": "glass" },
+    { "from": "glass", "to": "redstone" },
+    { "from": "redstone", "to": "quartz" },
+    { "from": "quartz", "to": "comparator" }
+  ]
+}
+```
+
+If `initial_nodes` is omitted, the mod chooses a valid initial node when the sample graph is generated. If `chance` is omitted on an edge, it defaults to `1.0`.
+
+### Fully Customized Example
+
+This example uses a localized title, fixed coordinates, multiple initial nodes, tag input, custom-data input, and weighted edges.
+
+Save as `data/modpack/recipe_linkage/researches/redstone_lens.json`:
+
+```json
+{
+  "title": {
+    "translate": "research.modpack.redstone_lens",
+    "fallback": "Redstone Lens"
+  },
+  "target_stage": "redstone_lens",
+  "target": "comparator",
+  "min_distance_to_target": 4,
+  "generation_attempts": 96,
+  "initial_nodes": ["sand", "copper"],
+  "nodes": [
+    { "id": "sand", "tag": "minecraft:sand", "count": 8, "x": 5, "y": 58 },
+    { "id": "copper", "item": "minecraft:copper_ingot", "count": 3, "x": 8, "y": 78 },
+    { "id": "glass", "item": "minecraft:glass", "count": 3, "x": 25, "y": 52 },
+    { "id": "redstone", "item": "minecraft:redstone", "count": 4, "x": 42, "y": 30 },
+    { "id": "quartz", "item": "minecraft:quartz", "count": 2, "x": 55, "y": 42 },
+    { "id": "note", "item": "minecraft:paper", "count": 1, "nbt": "{\"recipe_linkage_note\":\"optics\"}", "x": 32, "y": 80 },
+    { "id": "spyglass", "item": "minecraft:spyglass", "count": 1, "x": 60, "y": 72 },
+    { "id": "daylight_detector", "item": "minecraft:daylight_detector", "count": 1, "x": 76, "y": 56 },
+    { "id": "comparator", "item": "minecraft:comparator", "count": 1, "x": 94, "y": 50 }
+  ],
+  "edges": [
+    { "from": "sand", "to": "glass", "chance": 1.0 },
+    { "from": "glass", "to": "redstone", "chance": 0.85 },
+    { "from": "redstone", "to": "quartz", "chance": 0.9 },
+    { "from": "quartz", "to": "comparator", "chance": 0.8 },
+    { "from": "glass", "to": "note", "chance": 0.65 },
+    { "from": "note", "to": "spyglass", "chance": 0.75 },
+    { "from": "copper", "to": "spyglass", "chance": 0.9 },
+    { "from": "spyglass", "to": "daylight_detector", "chance": 0.8 },
+    { "from": "daylight_detector", "to": "comparator", "chance": 0.7 },
+    { "from": "redstone", "to": "daylight_detector", "chance": 0.55 }
+  ]
+}
+```
+
+Add the title translation in a resource pack or KubeJS assets, for example `assets/modpack/lang/en_us.json`:
+
+```json
+{
+  "research.modpack.redstone_lens": "Redstone Lens"
+}
+```
+
+See the included datapack format documentation and vanilla example datapack for the full reference.
