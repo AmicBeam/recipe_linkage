@@ -16,6 +16,7 @@
   "message.recipe_linkage.research.completed": "Research completed: %s",
   "message.recipe_linkage.research.claimed": "Stage claimed: %s",
   "message.recipe_linkage.research.need_items": "Requires %sx %s",
+  "message.recipe_linkage.research.need_item_present": "Requires %s in inventory",
   "message.recipe_linkage.stage.astages_missing": "AStages is not installed; no stage was granted.",
   "gui.recipe_linkage.sample_slot": "Sample",
   "gui.recipe_linkage.no_sample": "Insert a research sample.",

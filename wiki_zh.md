@@ -1,67 +1,19 @@
-![Recipe Linkage](media/recipe-linkage-header-16x10.png)
+# Recipe Linkage Wiki
 
-# Recipe Linkage
+[README](README_ZH.md) | [English Wiki](wiki.md)
 
-**Recipe Linkage** 是一个面向 Minecraft NeoForge 1.21.1 和 Forge 1.20.1 整合包的配方研究台模组。
+这是 Recipe Linkage 面向整合包作者的详细用法文档，包含数据包路径、样本发放、研究 JSON 字段、配置项和示例。
 
-它新增一个研究台方块和可复用的研究样本。整合包作者通过数据包定义“材料关联”研究图，玩家在研究台中提交相关材料，打通路线并解锁对应阶段。
+## 研究流程
 
-## 核心特点
+1. 整合包向玩家发放已绑定研究样本。
+2. 玩家把样本放入 Recipe Research Table。
+3. 样本生成一张固定研究图，并保存到物品自身。
+4. 玩家提交材料，解锁当前可见节点。
+5. 当已解锁节点连接到可见终点时，研究完成。
+6. Recipe Linkage 根据配置自动授予阶段，或允许玩家右键已完成样本领取阶段。
 
-- 模组本体不内置研究内容，全部研究由数据包载入
-- 线索以物品图标呈现，不依赖文字谜面
-- 样本生成研究图后会永久保存进度
-- 玩家需要选择更省材料的路线，而不是盲目试物品
-- 研究完成后可联动 AStages 授予阶段
-- 可选支持 JEI 查询和 Sophisticated Backpacks 背包取材
-
-## 玩法流程
-
-玩家把已绑定的研究样本放入研究台后，样本会生成固定路线图。
-
-当前可提交节点会显示半透明物品图标和数量。玩家提交材料后，该节点变为已到达节点，并显露相邻节点。当已到达路线连接到终点时，研究完成。终点本身不需要提交物品。
-
-研究完成后的阶段发放、右键领取是否消耗样本，都可以通过配置文件调整。
-
-## 给整合包作者
-
-Recipe Linkage 不内置任何研究样本。你可以通过数据包定义研究，再用任务、战利品、命令、KubeJS 或其他系统发放已绑定的样本。
-
-研究节点支持：
-
-- 配方风格的 `ingredient` 对象，包括物品、标签、数组和已注册的自定义 ingredient 类型
-- 提交数量，也支持 `0` 表示只检查持有、不消耗
-- 兼容旧整合包的平铺 `item` / `tag` / `nbt` 节点字段
-- 手动坐标，或自动布局
-- 带概率的边，用于生成不同路线
-- Minecraft 文本组件形式的本地化标题
-
-这适合用来制作配方门槛、科技线、魔法发现、章节里程碑，或任何希望玩家从材料关系中理解进度的整合包内容。
-
-### 配置说明
-
-整合包和服务器可以在 `config/recipe_linkage-common.toml` 中调整行为：
-
-- `autoAwardStageOnCompletion`：默认 `true`，研究完成后自动授予配置的阶段。
-- `consumeCompletedSampleOnClaim`：默认 `false`，控制右键领取已完成样本时是否消耗样本。
-- `revealCompletedGraph`：默认 `false`，控制研究完成后是否显示完整生成路线图。
-- `enableSophisticatedBackpackMaterials`：默认 `true`，允许提交材料时从玩家携带的 Sophisticated Backpacks 中扣除匹配物品。
-
-## 阶段与辅助联动
-
-- **AStages**：作为研究完成后的阶段产物。
-- **JEI**：鼠标悬停研究节点时，可以使用 JEI 查询所需材料。
-- **Sophisticated Backpacks**：启用后，提交材料时可以从玩家携带的背包中扣除匹配物品。
-
-AStages 负责承接研究完成后的进度产物。JEI 和 Sophisticated Backpacks 属于可选的体验辅助联动。
-
-## 注意事项
-
-- 研究台不会消耗研究样本。
-- 取出样本不会重置研究图。
-- 已提交材料不会退还。
-- 样本生成路线后不会重新随机。
-- 模组本体不提供默认研究样本；整合包需要自行通过数据包和发放方式提供内容。
+终点节点永远不消耗物品。取出样本不会重置进度、退还材料或重新随机路线。
 
 ## 数据包路径
 
@@ -71,7 +23,11 @@ AStages 负责承接研究完成后的进度产物。JEI 和 Sophisticated Backp
 data/<namespace>/recipe_linkage/researches/<path>.json
 ```
 
-数据包载入的研究会直接以已绑定样本的形式出现在 Recipe Linkage 创造模式物品栏中。需要用命令发放时，NeoForge 1.21.1 使用 `minecraft:custom_data`：
+数据包载入的研究会直接以已绑定样本的形式出现在 Recipe Linkage 创造模式物品栏中。
+
+## 发放已绑定样本
+
+NeoForge 1.21.1 使用 `minecraft:custom_data`：
 
 ```mcfunction
 /give @p recipe_linkage:research_sample[minecraft:custom_data={RecipeLinkage:{Research:"modpack:basic_optics"}}]
@@ -83,7 +39,38 @@ Forge 1.20.1 使用旧版物品 NBT：
 /give @p recipe_linkage:research_sample{RecipeLinkage:{Research:"modpack:basic_optics"}}
 ```
 
-### AStages + KubeJS 配方绑定示例
+整合包也可以通过任务、战利品、KubeJS 或其他进度系统发放样本。
+
+## 配置说明
+
+整合包和服务器可以在 `config/recipe_linkage-common.toml` 中调整行为：
+
+- `autoAwardStageOnCompletion`：默认 `true`，研究完成后自动授予配置的阶段。
+- `consumeCompletedSampleOnClaim`：默认 `false`，控制右键领取已完成样本时是否消耗样本。
+- `revealCompletedGraph`：默认 `false`，控制研究完成后是否显示完整生成路线图。
+- `enableSophisticatedBackpackMaterials`：默认 `true`，允许提交材料时从玩家携带的 Sophisticated Backpacks 中扣除匹配物品。
+
+## 研究 JSON 字段
+
+- `title`：可选的 Minecraft 文本组件，用作研究显示名。整合包想做本地化时可以写 `{ "translate": "research.<namespace>.<path>", "fallback": "Readable Name" }`。
+- `target_stage`：AStages 阶段字符串，会传给 `/astages add <player> <stage> true true`。
+- `target`：可见终点节点的 id。
+- `initial_nodes`：可选数组，表示初始可提交节点。它们不是已提交状态。允许多个。
+- `min_distance_to_target`：从初始可提交节点集合到完成研究，期望至少需要提交的材料次数。终点不需要提交，因此不计入次数。
+- `generation_attempts`：生成带权路线图时尝试的候选数量，最后取评分较好的图。
+- `nodes[].ingredient`：推荐的材料格式。它接受配方风格的 ingredient，例如 `{ "item": "minecraft:glass" }`、`{ "tag": "minecraft:sand" }`、`[ { "item": "minecraft:coal" }, { "item": "minecraft:charcoal" } ]`，以及已注册的自定义 ingredient 类型。
+- 旧版 `nodes[].item`、`nodes[].tag`、`nodes[].nbt`：仍然兼容已有整合包。单个节点必须在 `ingredient` 和旧平铺字段之间二选一，但同一份研究 JSON 中不同节点可以混用两种写法。
+- `nodes[].count`：解锁该节点时消耗的材料数量，默认 `1`。写 `0` 表示只检查玩家是否持有匹配物品，不消耗。
+- 旧版 `nodes[].nbt`：可选 SNBT 字符串，用于匹配提交物品的数据。新写法推荐使用加载器自己的自定义 ingredient 格式。
+- `nodes[].x` 和 `nodes[].y`：可选百分比坐标。两个字段都提供时，该节点使用固定位置。缺少任意一个时，该节点交给自动布局。
+- `edges[].from` 和 `edges[].to`：这条边连接的两个节点 id。
+- `edges[].chance`：该边在单个样本生成图中出现的概率，不写时默认为 `1.0`。
+
+自动布局会在路线图、初始节点和终点确定后执行。它会尽量把起点侧放在左边、终点放在右边，按图距离分组，并使用紧凑的橄榄球型展开方式。
+
+研究台进度条使用“最少还需要提交几次材料”计算，不是单纯的边距离。
+
+## AStages + KubeJS 配方绑定示例
 
 下面示例把红石比较器配方绑定到研究 JSON 里的 `target_stage: "basic_optics"`。研究完成后，Recipe Linkage 会授予这个 AStages 阶段；AStages 的 KubeJS API 会让没有该阶段的玩家无法使用对应配方。
 
@@ -101,7 +88,7 @@ AStages.addRestrictionForRecipe(
 
 如果使用下面复杂示例里的 `target_stage: "redstone_lens"`，就把脚本中的 `basic_optics` 改成 `redstone_lens`。
 
-### 最简自动布局示例
+## 最简自动布局示例
 
 这个示例没有写任何 `x` 和 `y` 字段。Recipe Linkage 会自动布局，让整体尽量呈现左侧起点、右侧终点的路线图。
 
@@ -130,7 +117,7 @@ AStages.addRestrictionForRecipe(
 
 不写 `initial_nodes` 时，样本生成研究图时会自动选择一个合适的初始节点。不写 `chance` 时，该边的生成概率默认为 `1.0`。
 
-### 全部自定义的复杂示例
+## 全部自定义的复杂示例
 
 这个示例展示了本地化标题、固定坐标、多个初始节点、配方风格的 `ingredient` 输入、多选一输入和带概率的边。最简 `item` / `tag` 节点字段仍然可用，并且同一份研究 JSON 中，不同节点可以混用旧的平铺写法和新的 `ingredient` 写法。
 
@@ -180,5 +167,3 @@ AStages.addRestrictionForRecipe(
   "research.modpack.redstone_lens": "红石透镜研究"
 }
 ```
-
-完整字段说明可参考随模组提供的数据包格式文档和原版示例数据包。

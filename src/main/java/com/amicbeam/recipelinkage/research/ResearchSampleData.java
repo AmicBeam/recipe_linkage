@@ -113,10 +113,10 @@ public final class ResearchSampleData {
         ResearchMaterial material = graph.nodes().get(nodeIndex).material();
         ItemStack cost = material.displayStack();
         if (cost.isEmpty() || !hasItems(player, material)) {
-            return UnlockResult.fail(Optional.of(Component.translatable(
-                    "message.recipe_linkage.research.need_items",
-                    material.count(),
-                    cost.getHoverName())));
+            Component message = material.count() == 0
+                    ? Component.translatable("message.recipe_linkage.research.need_item_present", cost.getHoverName())
+                    : Component.translatable("message.recipe_linkage.research.need_items", material.count(), cost.getHoverName());
+            return UnlockResult.fail(Optional.of(message));
         }
         consumeItems(player, material);
         graph.unlock(nodeIndex);
@@ -130,10 +130,16 @@ public final class ResearchSampleData {
     }
 
     private static boolean hasItems(ServerPlayer player, ResearchMaterial material) {
+        if (material.count() == 0) {
+            return countItems(player, material, 1) > 0;
+        }
         return countItems(player, material, material.count()) >= material.count();
     }
 
     private static void consumeItems(ServerPlayer player, ResearchMaterial material) {
+        if (material.count() == 0) {
+            return;
+        }
         int remaining = consumeInventoryItems(player.getInventory(), material, material.count());
         if (remaining > 0 && RecipeLinkageConfig.ENABLE_SOPHISTICATED_BACKPACK_MATERIALS.get()) {
             consumeBackpackItems(player.getInventory(), material, remaining);

@@ -1,73 +1,21 @@
-![Recipe Linkage](media/recipe-linkage-header-16x10.png)
+# Recipe Linkage Wiki
 
-# Recipe Linkage
+[README](README.md) | [中文 Wiki](wiki_zh.md)
 
-**Recipe Linkage** is a data-driven research table mod for Minecraft NeoForge 1.21.1, with Forge 1.20.1 support.
+This page is the pack-author reference for Recipe Linkage. It covers datapack paths, sample delivery, research JSON fields, config options, and examples.
 
-It is made for modpacks that want recipes, machines, or progression steps to feel like discoveries instead of simple quest rewards. Pack authors define research samples through datapacks, then players solve material-linkage puzzles on a dedicated research table to unlock configured progression stages.
+## Research Flow
 
-## What Does It Add?
+1. A pack gives the player a bound research sample.
+2. The player inserts it into the Recipe Research Table.
+3. The sample generates one fixed graph and stores it on the item.
+4. The player submits materials to unlock visible nodes.
+5. The research completes when unlocked nodes connect to the visible target node.
+6. Recipe Linkage grants or lets the player claim the configured AStages stage, depending on config.
 
-- A new **Recipe Research Table** block
-- Reusable **Research Samples** with persistent graph progress
-- Icon-based research graphs built from item relationships
-- Material submission puzzles with visible targets
-- AStages progression rewards for completed research
-- Optional JEI and Sophisticated Backpacks quality-of-life support
+The target node never consumes an item. Removing a sample does not reset progress, refund materials, or reroll the graph.
 
-## How Research Works
-
-Players insert a bound research sample into the table. The sample generates a fixed research graph and keeps that graph forever.
-
-The target is visible, but the route must be opened by submitting related materials. Available nodes show item icons and required counts, so the puzzle is about choosing an efficient path through the graph instead of guessing a written riddle.
-
-The final target node does not consume an item. Research is complete once the reached path connects to the target.
-
-Completed samples can be right-clicked to claim their configured stage. Server configs can control whether stages are awarded automatically on completion and whether claimed samples are consumed.
-
-## Designed For Modpacks
-
-Recipe Linkage does not ship built-in research content. Every research is loaded from datapacks, so pack authors decide exactly what each sample represents.
-
-Research nodes can use:
-
-- Recipe-style `ingredient` objects, including items, tags, arrays, and registered custom ingredient types
-- A required count, including `0` for possession checks
-- Legacy flat `item` / `tag` / `nbt` node fields for existing packs
-- Optional fixed coordinates, or automatic graph layout
-- Weighted edges for randomized route generation
-- Localized research titles through Minecraft text components
-
-This makes it useful for gated recipes, themed technology chains, magic discoveries, chapter milestones, or any progression where materials should hint at their own relationships.
-
-## Progression And QoL Integrations
-
-- **AStages**: the progression output for completed research.
-- **JEI**: hover a research node and use JEI lookup for the required material.
-- **Sophisticated Backpacks**: material submissions can pull matching items from carried backpacks when enabled.
-
-AStages gives completed samples their progression result. JEI and Sophisticated Backpacks are optional quality-of-life integrations.
-
-## Important Notes
-
-- Research samples are not consumed by the table.
-- Removing a sample does not reset its graph.
-- Submitted materials are not refunded.
-- Generated routes do not reroll after the sample is created.
-- The base mod provides no default research samples; packs must provide them through datapacks, quests, loot, commands, KubeJS, or another delivery system.
-
-## For Pack Authors
-
-### Configuration
-
-Pack and server owners can tune behavior in `config/recipe_linkage-common.toml`:
-
-- `autoAwardStageOnCompletion`: default `true`, grants the configured stage when research is completed.
-- `consumeCompletedSampleOnClaim`: default `false`, controls whether right-click claiming consumes a completed sample.
-- `revealCompletedGraph`: default `false`, controls whether completed research reveals the full generated graph.
-- `enableSophisticatedBackpackMaterials`: default `true`, allows material submissions to pull from carried Sophisticated Backpacks.
-
-### Datapack Path
+## Datapack Path
 
 Research JSON files are loaded from:
 
@@ -75,7 +23,11 @@ Research JSON files are loaded from:
 data/<namespace>/recipe_linkage/researches/<path>.json
 ```
 
-Loaded research definitions also appear as ready-to-use bound samples in the Recipe Linkage creative tab. For command-based delivery, NeoForge 1.21.1 uses `minecraft:custom_data`:
+Loaded research definitions also appear as ready-to-use bound samples in the Recipe Linkage creative tab.
+
+## Giving Bound Samples
+
+NeoForge 1.21.1 uses `minecraft:custom_data`:
 
 ```mcfunction
 /give @p recipe_linkage:research_sample[minecraft:custom_data={RecipeLinkage:{Research:"modpack:basic_optics"}}]
@@ -87,7 +39,38 @@ Forge 1.20.1 uses legacy item NBT:
 /give @p recipe_linkage:research_sample{RecipeLinkage:{Research:"modpack:basic_optics"}}
 ```
 
-### AStages + KubeJS Recipe Gate Example
+Packs can also distribute samples through quests, loot tables, KubeJS, or other progression systems.
+
+## Config
+
+Pack and server owners can tune behavior in `config/recipe_linkage-common.toml`:
+
+- `autoAwardStageOnCompletion`: default `true`, grants the configured stage when research is completed.
+- `consumeCompletedSampleOnClaim`: default `false`, controls whether right-click claiming consumes a completed sample.
+- `revealCompletedGraph`: default `false`, controls whether completed research reveals the full generated graph.
+- `enableSophisticatedBackpackMaterials`: default `true`, allows material submissions to pull from carried Sophisticated Backpacks.
+
+## Research JSON Fields
+
+- `title`: optional Minecraft text component used as the research display name. Use `{ "translate": "research.<namespace>.<path>", "fallback": "Readable Name" }` for localization.
+- `target_stage`: AStages stage string passed to `/astages add <player> <stage> true true`.
+- `target`: node id of the visible final node.
+- `initial_nodes`: optional array of node ids that are available to submit at the start. They are not pre-submitted. Multiple initial nodes are allowed.
+- `min_distance_to_target`: preferred minimum number of material submissions needed to finish from the initial available node set. The target node itself is not counted.
+- `generation_attempts`: number of weighted graph candidates to generate before taking the best-scored one.
+- `nodes[].ingredient`: preferred material format. It accepts recipe-style item ingredients, such as `{ "item": "minecraft:glass" }`, `{ "tag": "minecraft:sand" }`, arrays like `[ { "item": "minecraft:coal" }, { "item": "minecraft:charcoal" } ]`, and registered custom ingredient types.
+- Legacy `nodes[].item`, `nodes[].tag`, and `nodes[].nbt`: still supported for existing packs. A single node must use either `ingredient` or the legacy flat fields, but different nodes in the same research JSON may mix both styles.
+- `nodes[].count`: material count consumed when unlocking that node. Defaults to `1`. Use `0` for a possession check: the player must have a matching item in inventory or supported backpack, but the item is not consumed.
+- Legacy `nodes[].nbt`: optional SNBT string matched against the submitted stack's item data. For new `ingredient` nodes, prefer the loader's own custom ingredient format instead.
+- `nodes[].x` and `nodes[].y`: optional percentage coordinates used as fixed layout anchors. Provide both fields to pin a node. If either field is omitted, the node is placed by automatic layout.
+- `edges[].from` and `edges[].to`: node ids connected by this edge.
+- `edges[].chance`: probability that this edge appears in an individual generated sample graph. Defaults to `1.0` when omitted.
+
+Automatic layout runs after the route graph, initial nodes, and target are known. It places the start side on the left, the target on the right, groups nodes by graph distance, and uses a compact football-shaped spread.
+
+The table progress bar uses the shortest remaining number of material submissions, not raw edge distance.
+
+## AStages + KubeJS Recipe Gate Example
 
 This example binds the redstone comparator recipe to the same `target_stage: "basic_optics"` used by the research JSON. Recipe Linkage grants that AStages stage when the research is completed; the AStages KubeJS API makes the recipe require that stage.
 
@@ -105,7 +88,7 @@ AStages.addRestrictionForRecipe(
 
 If you use the full example below with `target_stage: "redstone_lens"`, replace `basic_optics` with `redstone_lens`.
 
-### Minimal Auto-Layout Example
+## Minimal Auto-Layout Example
 
 This example omits all `x` and `y` fields. Recipe Linkage will automatically place the graph with the start side on the left and the target on the right.
 
@@ -134,7 +117,7 @@ Save as `data/modpack/recipe_linkage/researches/basic_optics.json`:
 
 If `initial_nodes` is omitted, the mod chooses a valid initial node when the sample graph is generated. If `chance` is omitted on an edge, it defaults to `1.0`.
 
-### Fully Customized Example
+## Fully Customized Example
 
 This example uses a localized title, fixed coordinates, multiple initial nodes, recipe-style `ingredient` inputs, an OR ingredient, and weighted edges. The minimal `item` / `tag` node fields remain supported, and different nodes in the same research JSON may mix the old flat style and the `ingredient` style.
 
@@ -184,5 +167,3 @@ Add the title translation in a resource pack or KubeJS assets, for example `asse
   "research.modpack.redstone_lens": "Redstone Lens"
 }
 ```
-
-See the included datapack format documentation and vanilla example datapack for the full reference.
