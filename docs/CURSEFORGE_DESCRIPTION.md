@@ -31,10 +31,9 @@ Recipe Linkage does not ship built-in research content. Every research is loaded
 
 Research nodes can use:
 
-- A specific item
-- An item tag
-- A required count
-- Optional NBT matching
+- Recipe-style `ingredient` objects, including items, tags, arrays, and registered custom ingredient types
+- A required count, including `0` for possession checks
+- Legacy flat `item` / `tag` / `nbt` node fields for existing packs
 - Optional fixed coordinates, or automatic graph layout
 - Weighted edges for randomized route generation
 - Localized research titles through Minecraft text components
@@ -112,4 +111,4 @@ data/<namespace>/recipe_linkage/researches/<path>.json
 /give @p recipe_linkage:research_sample{RecipeLinkage:{Research:"modpack:resonant_core"}}
 ```
 
-节点支持具体物品、物品标签、数量、NBT 条件、手动坐标或自动布局。边可以配置生成概率，从而让同一研究在不同样本中拥有不同路线。
+节点支持配方风格的 `ingredient` 对象、数量、手动坐标或自动布局；旧的 `item` / `tag` / `nbt` 平铺字段仍然兼容。边可以配置生成概率，从而让同一研究在不同样本中拥有不同路线。

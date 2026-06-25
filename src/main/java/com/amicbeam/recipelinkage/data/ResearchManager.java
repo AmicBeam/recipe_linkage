@@ -19,6 +19,8 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraftforge.common.crafting.CraftingHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -110,17 +112,35 @@ public class ResearchManager extends SimpleJsonResourceReloadListener {
     }
 
     private static ResearchMaterial parseMaterial(JsonObject nodeObject, int index) {
+        int count = Math.max(0, GsonHelper.getAsInt(nodeObject, "count", 1));
+        boolean hasIngredient = nodeObject.has("ingredient");
         boolean hasItem = nodeObject.has("item");
         boolean hasTag = nodeObject.has("tag");
+        boolean hasLegacyNbt = nodeObject.has("nbt");
+        if (hasIngredient) {
+            if (hasItem || hasTag || hasLegacyNbt) {
+                throw new IllegalArgumentException("nodes[" + index + "] must use either ingredient or legacy item/tag/nbt fields, not both");
+            }
+            return ResearchMaterial.ingredient(parseIngredient(nodeObject.get("ingredient"), "nodes[" + index + "].ingredient"), count);
+        }
         if (hasItem == hasTag) {
             throw new IllegalArgumentException("nodes[" + index + "] must contain exactly one of item or tag");
         }
-        int count = Math.max(1, GsonHelper.getAsInt(nodeObject, "count", 1));
         CompoundTag nbt = parseNbt(nodeObject, "nodes[" + index + "].nbt");
         if (hasTag) {
             return ResearchMaterial.tag(parseId(GsonHelper.getAsString(nodeObject, "tag"), "nodes[" + index + "].tag"), count, nbt);
         }
         return ResearchMaterial.item(parseId(GsonHelper.getAsString(nodeObject, "item"), "nodes[" + index + "].item"), count, nbt);
+    }
+
+    private static Ingredient parseIngredient(JsonElement element, String field) {
+        try {
+            return CraftingHelper.getIngredient(element, false);
+        } catch (JsonSyntaxException ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            throw new JsonSyntaxException("Invalid " + field + ": " + ex.getMessage(), ex);
+        }
     }
 
     private static CompoundTag parseNbt(JsonObject object, String field) {
@@ -172,7 +192,7 @@ public class ResearchManager extends SimpleJsonResourceReloadListener {
             if (nodeIds.put(node.id(), i) != null) {
                 throw new IllegalArgumentException("duplicate node id " + node.id());
             }
-            if (!node.material().tag() && !ForgeRegistries.ITEMS.containsKey(node.material().id())) {
+            if (node.material().legacyItem() && !ForgeRegistries.ITEMS.containsKey(node.material().id())) {
                 throw new IllegalArgumentException("node " + node.id() + " references missing item " + node.material().id());
             }
         }

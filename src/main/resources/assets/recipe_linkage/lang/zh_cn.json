@@ -16,6 +16,7 @@
   "message.recipe_linkage.research.completed": "研究完成：%s",
   "message.recipe_linkage.research.claimed": "已领取阶段：%s",
   "message.recipe_linkage.research.need_items": "需要 %sx %s",
+  "message.recipe_linkage.research.need_item_present": "需要持有 %s",
   "message.recipe_linkage.stage.astages_missing": "未安装 AStages，无法授予阶段。",
   "gui.recipe_linkage.sample_slot": "样本",
   "gui.recipe_linkage.no_sample": "放入研究样本。",
