@@ -20,9 +20,7 @@ public final class StageAwarder {
                 .withPermission(4)
                 .withSuppressedOutput();
         String playerName = player.getGameProfile().getName();
-        String command = "astages add " + playerName + " " + stage + " true true";
-        player.server.getCommands().performPrefixedCommand(source, command);
-        return true;
+        String command = "astages add " + playerName + " " + stage + " false false false";
+        return player.server.getCommands().performPrefixedCommand(source, command) > 0;
     }
 }
-

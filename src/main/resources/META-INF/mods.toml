@@ -36,6 +36,6 @@ side="CLIENT"
 [[dependencies.${mod_id}]]
 modId="astages"
 mandatory=false
-versionRange="[1,)"
+versionRange="[2.3.0,)"
 ordering="AFTER"
 side="BOTH"

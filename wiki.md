@@ -53,7 +53,7 @@ Pack and server owners can tune behavior in `config/recipe_linkage-common.toml`:
 ## Research JSON Fields
 
 - `title`: optional Minecraft text component used as the research display name. Use `{ "translate": "research.<namespace>.<path>", "fallback": "Readable Name" }` for localization.
-- `target_stage`: AStages stage string passed to `/astages add <player> <stage> true true`.
+- `target_stage`: AStages stage string passed to `/astages add <player> <stage> false false false`.
 - `target`: node id of the visible final node.
 - `initial_nodes`: optional array of node ids that are available to submit at the start. They are not pre-submitted. Multiple initial nodes are allowed.
 - `min_distance_to_target`: preferred minimum number of material submissions needed to finish from the initial available node set. The target node itself is not counted.
