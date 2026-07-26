@@ -53,7 +53,7 @@ Forge 1.20.1 使用旧版物品 NBT：
 ## 研究 JSON 字段
 
 - `title`：可选的 Minecraft 文本组件，用作研究显示名。整合包想做本地化时可以写 `{ "translate": "research.<namespace>.<path>", "fallback": "Readable Name" }`。
-- `target_stage`：AStages 阶段字符串，会传给 `/astages add <player> <stage> true true`。
+- `target_stage`：AStages 阶段字符串，会传给 `/astages add <player> <stage> false false false`。
 - `target`：可见终点节点的 id。
 - `initial_nodes`：可选数组，表示初始可提交节点。它们不是已提交状态。允许多个。
 - `min_distance_to_target`：从初始可提交节点集合到完成研究，期望至少需要提交的材料次数。终点不需要提交，因此不计入次数。

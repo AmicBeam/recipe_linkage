@@ -73,7 +73,7 @@ AStages.addRestrictionForRecipe(
 
 - `title`: Minecraft text component used as the research display name. Use `{ "translate": "research.<namespace>.<path>", "fallback": "Readable Name" }` when pack authors want localization.
 - Localized title strings are client assets, so put them in a resource pack or KubeJS assets, for example `assets/<namespace>/lang/en_us.json` and `assets/<namespace>/lang/zh_cn.json`.
-- `target_stage`: AStages stage string passed to `/astages add <player> <stage> true true`.
+- `target_stage`: AStages stage string passed to `/astages add <player> <stage> false false false`.
 - `target`: node id of the visible final node.
 - `initial_nodes`: optional array of node ids that are available to submit at the start. They are not pre-submitted. Multiple initial nodes are allowed. If the field is omitted or empty, one initial node is chosen randomly with `min_distance_to_target` applied when possible.
 - `min_distance_to_target`: preferred minimum number of material submissions needed to finish the research from the initial available node set. The target node itself is not counted because it does not require submission. Candidates that satisfy this value are preferred; if none can satisfy it, generation falls back to the farthest valid candidate.
