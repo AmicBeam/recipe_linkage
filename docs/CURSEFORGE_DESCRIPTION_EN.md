@@ -132,7 +132,7 @@ Save as `data/modpack/recipe_linkage/researches/basic_optics.json`:
 }
 ```
 
-If `initial_nodes` is omitted, the mod chooses a valid initial node when the sample graph is generated. If `chance` is omitted on an edge, it defaults to `1.0`.
+If `initial_nodes` is omitted, the mod chooses a valid initial node when the sample graph is generated. If multiple `initial_nodes` are listed, generated samples randomly activate one of the reachable listed nodes unless `activate_all_initial_nodes` is set to `true`. If `chance` is omitted on an edge, it defaults to `1.0`.
 
 ### Fully Customized Example
 
@@ -151,6 +151,7 @@ Save as `data/modpack/recipe_linkage/researches/redstone_lens.json`:
   "min_distance_to_target": 4,
   "generation_attempts": 96,
   "initial_nodes": ["sand", "copper"],
+  "activate_all_initial_nodes": true,
   "nodes": [
     { "id": "sand", "ingredient": { "tag": "minecraft:sand" }, "count": 8, "x": 5, "y": 58 },
     { "id": "copper", "ingredient": { "item": "minecraft:copper_ingot" }, "count": 3, "x": 8, "y": 78 },

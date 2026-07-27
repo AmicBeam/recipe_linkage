@@ -128,7 +128,7 @@ AStages.addRestrictionForRecipe(
 }
 ```
 
-不写 `initial_nodes` 时，样本生成研究图时会自动选择一个合适的初始节点。不写 `chance` 时，该边的生成概率默认为 `1.0`。
+不写 `initial_nodes` 时，样本生成研究图时会自动选择一个合适的初始节点。`initial_nodes` 填写多个时，生成样本默认只会随机激活其中一个本次可达节点；如果想全部激活，设置 `activate_all_initial_nodes` 为 `true`。不写 `chance` 时，该边的生成概率默认为 `1.0`。
 
 ### 全部自定义的复杂示例
 
@@ -147,6 +147,7 @@ AStages.addRestrictionForRecipe(
   "min_distance_to_target": 4,
   "generation_attempts": 96,
   "initial_nodes": ["sand", "copper"],
+  "activate_all_initial_nodes": true,
   "nodes": [
     { "id": "sand", "ingredient": { "tag": "minecraft:sand" }, "count": 8, "x": 5, "y": 58 },
     { "id": "copper", "ingredient": { "item": "minecraft:copper_ingot" }, "count": 3, "x": 8, "y": 78 },
