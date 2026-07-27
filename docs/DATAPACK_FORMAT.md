@@ -29,6 +29,7 @@ The first time the sample is inserted into a research table, the generated graph
   "min_distance_to_target": 3,
   "generation_attempts": 64,
   "initial_nodes": ["copper"],
+  "activate_all_initial_nodes": false,
   "nodes": [
     { "id": "copper", "ingredient": { "item": "minecraft:copper_ingot" }, "count": 2, "x": 5, "y": 55 },
     { "id": "redstone", "ingredient": { "item": "minecraft:redstone" }, "count": 4, "x": 30, "y": 40 },
@@ -52,7 +53,8 @@ The first time the sample is inserted into a research table, the generated graph
 - Localized title strings are client assets, so put them in a resource pack or KubeJS assets, for example `assets/<namespace>/lang/en_us.json` and `assets/<namespace>/lang/zh_cn.json`.
 - `target_stage`: AStages stage string passed to `/astages add <player> <stage> false false false`.
 - `target`: node id of the visible final node.
-- `initial_nodes`: optional array of node ids that are available to submit at the start. They are not pre-submitted. Multiple initial nodes are allowed. If the field is omitted or empty, one initial node is chosen randomly with `min_distance_to_target` applied when possible.
+- `initial_nodes`: optional array of candidate node ids that can become available to submit at the start. They are not pre-submitted. If the field contains multiple nodes, one reachable node from the list is chosen randomly for each generated sample graph by default. If the field is omitted or empty, one initial node is chosen randomly with `min_distance_to_target` applied when possible.
+- `activate_all_initial_nodes`: optional boolean, defaults to `false`. When `true`, every node listed in `initial_nodes` is available at the start, matching the old multi-start behavior.
 - `min_distance_to_target`: preferred minimum number of material submissions needed to finish the research from the initial available node set. The target node itself is not counted because it does not require submission. Candidates that satisfy this value are preferred; if none can satisfy it, generation falls back to the farthest valid candidate.
 - `generation_attempts`: number of weighted graph candidates to generate before taking the best-scored one.
 - `nodes[].ingredient`: preferred material format. It accepts the same item ingredient JSON used by recipes, such as `{ "item": "minecraft:glass" }`, `{ "tag": "minecraft:sand" }`, or arrays like `[ { "item": "minecraft:coal" }, { "item": "minecraft:charcoal" } ]`. Loader and mod custom ingredient types are also accepted when they are registered.

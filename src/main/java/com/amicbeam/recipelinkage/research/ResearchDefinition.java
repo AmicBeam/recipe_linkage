@@ -16,6 +16,7 @@ public record ResearchDefinition(
         int minDistanceToTarget,
         int generationAttempts,
         boolean randomInitialNodes,
+        boolean activateAllInitialNodes,
         List<String> initialNodes,
         List<Node> nodes,
         List<Edge> edges

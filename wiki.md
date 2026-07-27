@@ -55,7 +55,8 @@ Pack and server owners can tune behavior in `config/recipe_linkage-common.toml`:
 - `title`: optional Minecraft text component used as the research display name. Use `{ "translate": "research.<namespace>.<path>", "fallback": "Readable Name" }` for localization.
 - `target_stage`: AStages stage string passed to `/astages add <player> <stage> false false false`.
 - `target`: node id of the visible final node.
-- `initial_nodes`: optional array of node ids that are available to submit at the start. They are not pre-submitted. Multiple initial nodes are allowed.
+- `initial_nodes`: optional array of candidate node ids that can become available to submit at the start. They are not pre-submitted. If multiple nodes are listed, one reachable node from the list is chosen randomly for each generated sample graph by default.
+- `activate_all_initial_nodes`: optional boolean, defaults to `false`. When `true`, every node listed in `initial_nodes` is available at the start, matching the old multi-start behavior.
 - `min_distance_to_target`: preferred minimum number of material submissions needed to finish from the initial available node set. The target node itself is not counted.
 - `generation_attempts`: number of weighted graph candidates to generate before taking the best-scored one.
 - `nodes[].ingredient`: preferred material format. It accepts recipe-style item ingredients, such as `{ "item": "minecraft:glass" }`, `{ "tag": "minecraft:sand" }`, arrays like `[ { "item": "minecraft:coal" }, { "item": "minecraft:charcoal" } ]`, and registered custom ingredient types.
@@ -115,7 +116,7 @@ Save as `data/modpack/recipe_linkage/researches/basic_optics.json`:
 }
 ```
 
-If `initial_nodes` is omitted, the mod chooses a valid initial node when the sample graph is generated. If `chance` is omitted on an edge, it defaults to `1.0`.
+If `initial_nodes` is omitted, the mod chooses a valid initial node when the sample graph is generated. If multiple `initial_nodes` are listed, generated samples randomly activate one of the reachable listed nodes unless `activate_all_initial_nodes` is set to `true`. If `chance` is omitted on an edge, it defaults to `1.0`.
 
 ## Fully Customized Example
 
@@ -134,6 +135,7 @@ Save as `data/modpack/recipe_linkage/researches/redstone_lens.json`:
   "min_distance_to_target": 4,
   "generation_attempts": 96,
   "initial_nodes": ["sand", "copper"],
+  "activate_all_initial_nodes": true,
   "nodes": [
     { "id": "sand", "ingredient": { "tag": "minecraft:sand" }, "count": 8, "x": 5, "y": 58 },
     { "id": "copper", "ingredient": { "item": "minecraft:copper_ingot" }, "count": 3, "x": 8, "y": 78 },

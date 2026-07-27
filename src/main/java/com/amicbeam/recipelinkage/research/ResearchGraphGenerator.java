@@ -29,15 +29,16 @@ public final class ResearchGraphGenerator {
 
     public static ResearchGraph generate(ResearchDefinition definition, long seed) {
         RandomSource random = RandomSource.create(seed);
+        List<Integer> selectedInitialNodes = selectedInitialNodes(definition, random);
         Candidate best = null;
         for (int attempt = 0; attempt < definition.generationAttempts(); attempt++) {
-            Candidate candidate = attempt(definition, random);
+            Candidate candidate = attempt(definition, random, selectedInitialNodes);
             if (candidate != null && isBetter(candidate, best)) {
                 best = candidate;
             }
         }
         if (best == null || !best.meetsMinDistance()) {
-            Candidate fallback = fallback(definition);
+            Candidate fallback = fallback(definition, selectedInitialNodes);
             if (fallback != null && isBetter(fallback, best)) {
                 best = fallback;
             }
@@ -61,7 +62,19 @@ public final class ResearchGraphGenerator {
         return candidate.score() > best.score();
     }
 
-    private static Candidate attempt(ResearchDefinition definition, RandomSource random) {
+    private static List<Integer> selectedInitialNodes(ResearchDefinition definition, RandomSource random) {
+        if (definition.randomInitialNodes() || definition.initialNodes().isEmpty()) {
+            return null;
+        }
+        Map<String, Integer> index = definition.nodeIndex();
+        List<Integer> initialNodes = definition.initialNodes().stream().map(index::get).toList();
+        if (definition.activateAllInitialNodes()) {
+            return initialNodes;
+        }
+        return List.of(initialNodes.get(random.nextInt(initialNodes.size())));
+    }
+
+    private static Candidate attempt(ResearchDefinition definition, RandomSource random, List<Integer> selectedInitialNodes) {
         Map<String, Integer> index = definition.nodeIndex();
         List<ResearchGraph.Edge> selected = new ArrayList<>();
         for (ResearchDefinition.Edge edge : definition.edges()) {
@@ -69,25 +82,25 @@ public final class ResearchGraphGenerator {
                 selected.add(new ResearchGraph.Edge(index.get(edge.from()), index.get(edge.to())));
             }
         }
-        return score(definition, selected, random);
+        return score(definition, selected, random, selectedInitialNodes);
     }
 
-    private static Candidate fallback(ResearchDefinition definition) {
+    private static Candidate fallback(ResearchDefinition definition, List<Integer> selectedInitialNodes) {
         Map<String, Integer> index = definition.nodeIndex();
         List<ResearchGraph.Edge> allEdges = definition.edges().stream()
                 .map(edge -> new ResearchGraph.Edge(index.get(edge.from()), index.get(edge.to())))
                 .toList();
-        return score(definition, allEdges, RandomSource.create(0L));
+        return score(definition, allEdges, RandomSource.create(0L), selectedInitialNodes);
     }
 
-    private static Candidate score(ResearchDefinition definition, List<ResearchGraph.Edge> edges, RandomSource random) {
+    private static Candidate score(ResearchDefinition definition, List<ResearchGraph.Edge> edges, RandomSource random, List<Integer> selectedInitialNodes) {
         int target = definition.targetIndex();
         if (target < 0 || edges.isEmpty()) {
             return null;
         }
         List<List<Integer>> adjacency = adjacency(definition.nodes().size(), edges);
         int[] distance = distances(adjacency, target);
-        StartSelection startSelection = selectStarts(definition, distance, random);
+        StartSelection startSelection = selectStarts(definition, distance, random, selectedInitialNodes);
         if (startSelection == null) {
             return null;
         }
@@ -130,18 +143,14 @@ public final class ResearchGraphGenerator {
         return new Candidate(start, target, initialNodes, edges, score, minSubmissionsToTarget, minSubmissionsToTarget >= definition.minDistanceToTarget());
     }
 
-    private static StartSelection selectStarts(ResearchDefinition definition, int[] distance, RandomSource random) {
-        Map<String, Integer> index = definition.nodeIndex();
-        if (!definition.randomInitialNodes()) {
-            List<Integer> initialNodes = definition.initialNodes().stream().map(index::get).toList();
-            if (!initialNodes.isEmpty()) {
-                for (Integer initialNode : initialNodes) {
-                    if (initialNode == null || initialNode < 0 || initialNode >= distance.length || distance[initialNode] < 0) {
-                        return null;
-                    }
+    private static StartSelection selectStarts(ResearchDefinition definition, int[] distance, RandomSource random, List<Integer> selectedInitialNodes) {
+        if (selectedInitialNodes != null && !selectedInitialNodes.isEmpty()) {
+            for (Integer initialNode : selectedInitialNodes) {
+                if (initialNode == null || initialNode < 0 || initialNode >= distance.length || distance[initialNode] < 0) {
+                    return null;
                 }
-                return new StartSelection(initialNodes.get(0), initialNodes);
             }
+            return new StartSelection(selectedInitialNodes.get(0), selectedInitialNodes);
         }
 
         List<Integer> starts = new ArrayList<>();

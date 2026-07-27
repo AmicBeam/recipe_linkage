@@ -55,7 +55,8 @@ Forge 1.20.1 使用旧版物品 NBT：
 - `title`：可选的 Minecraft 文本组件，用作研究显示名。整合包想做本地化时可以写 `{ "translate": "research.<namespace>.<path>", "fallback": "Readable Name" }`。
 - `target_stage`：AStages 阶段字符串，会传给 `/astages add <player> <stage> false false false`。
 - `target`：可见终点节点的 id。
-- `initial_nodes`：可选数组，表示初始可提交节点。它们不是已提交状态。允许多个。
+- `initial_nodes`：可选数组，表示可作为起点的候选节点。它们不是已提交状态。填写多个时，每次生成样本默认会从其中随机选择一个本次可达的节点作为初始可提交节点。
+- `activate_all_initial_nodes`：可选布尔值，默认 `false`。设为 `true` 时，`initial_nodes` 中的所有节点都会在开局可提交，等同于旧版多起点行为。
 - `min_distance_to_target`：从初始可提交节点集合到完成研究，期望至少需要提交的材料次数。终点不需要提交，因此不计入次数。
 - `generation_attempts`：生成带权路线图时尝试的候选数量，最后取评分较好的图。
 - `nodes[].ingredient`：推荐的材料格式。它接受配方风格的 ingredient，例如 `{ "item": "minecraft:glass" }`、`{ "tag": "minecraft:sand" }`、`[ { "item": "minecraft:coal" }, { "item": "minecraft:charcoal" } ]`，以及已注册的自定义 ingredient 类型。
@@ -115,7 +116,7 @@ AStages.addRestrictionForRecipe(
 }
 ```
 
-不写 `initial_nodes` 时，样本生成研究图时会自动选择一个合适的初始节点。不写 `chance` 时，该边的生成概率默认为 `1.0`。
+不写 `initial_nodes` 时，样本生成研究图时会自动选择一个合适的初始节点。`initial_nodes` 填写多个时，生成样本默认只会随机激活其中一个本次可达节点；如果想全部激活，设置 `activate_all_initial_nodes` 为 `true`。不写 `chance` 时，该边的生成概率默认为 `1.0`。
 
 ## 全部自定义的复杂示例
 
@@ -134,6 +135,7 @@ AStages.addRestrictionForRecipe(
   "min_distance_to_target": 4,
   "generation_attempts": 96,
   "initial_nodes": ["sand", "copper"],
+  "activate_all_initial_nodes": true,
   "nodes": [
     { "id": "sand", "ingredient": { "tag": "minecraft:sand" }, "count": 8, "x": 5, "y": 58 },
     { "id": "copper", "ingredient": { "item": "minecraft:copper_ingot" }, "count": 3, "x": 8, "y": 78 },

@@ -79,9 +79,10 @@ public class ResearchManager extends SimpleJsonResourceReloadListener {
         List<ResearchDefinition.Node> nodes = parseNodes(object);
         List<ResearchDefinition.Edge> edges = parseEdges(object);
         boolean randomInitialNodes = !object.has("initial_nodes");
+        boolean activateAllInitialNodes = GsonHelper.getAsBoolean(object, "activate_all_initial_nodes", false);
         List<String> initialNodes = randomInitialNodes ? List.of() : parseInitialNodes(object);
         validate(id, targetNode, initialNodes, nodes, edges);
-        return new ResearchDefinition(id, title, targetStage, targetNode, minDistance, attempts, randomInitialNodes, initialNodes, nodes, edges);
+        return new ResearchDefinition(id, title, targetStage, targetNode, minDistance, attempts, randomInitialNodes, activateAllInitialNodes, initialNodes, nodes, edges);
     }
 
     private static Component parseTitle(ResourceLocation id, JsonObject object) {
